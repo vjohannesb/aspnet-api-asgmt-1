@@ -5,6 +5,15 @@ VisualStudioVersion = 16.0.31025.194
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApi", "WebApi\WebApi.csproj", "{54D9F4C5-1635-43BE-9700-D41024B8F6BE}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D118EBD8-D74F-422C-B27F-28FCF3A047F0}"
+	ProjectSection(SolutionItems) = preProject
+		Uppgift1.txt = Uppgift1.txt
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorApp", "BlazorApp\BlazorApp.csproj", "{99317D14-37D5-4F0A-B3AF-D5CE279B6D0C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedLibrary", "SharedLibrary\SharedLibrary.csproj", "{8305118C-2AA0-4128-92E4-0403C58B37F3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +24,14 @@ Global
 		{54D9F4C5-1635-43BE-9700-D41024B8F6BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{54D9F4C5-1635-43BE-9700-D41024B8F6BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{54D9F4C5-1635-43BE-9700-D41024B8F6BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99317D14-37D5-4F0A-B3AF-D5CE279B6D0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99317D14-37D5-4F0A-B3AF-D5CE279B6D0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99317D14-37D5-4F0A-B3AF-D5CE279B6D0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99317D14-37D5-4F0A-B3AF-D5CE279B6D0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8305118C-2AA0-4128-92E4-0403C58B37F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8305118C-2AA0-4128-92E4-0403C58B37F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8305118C-2AA0-4128-92E4-0403C58B37F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8305118C-2AA0-4128-92E4-0403C58B37F3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
