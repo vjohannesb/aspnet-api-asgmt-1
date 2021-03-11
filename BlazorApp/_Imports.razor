@@ -1,5 +1,6 @@
 ﻿@using System.Net.Http
 @using System.Net.Http.Json
+@using System.Net.Http.Headers
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
@@ -8,3 +9,16 @@
 @using Microsoft.JSInterop
 @using BlazorApp
 @using BlazorApp.Shared
+
+@using SharedLibrary.Models;
+@using SharedLibrary.Models.Admin;
+@using SharedLibrary.Models.Customer;
+@using SharedLibrary.Models.Ticket;
+
+@using Blazored.LocalStorage;
+@using Microsoft.Extensions.Logging; 
+@using Newtonsoft.Json;
+@using System.Text;
+
+@inject NavigationManager navigationManager
+@inject ILocalStorageService localStorage

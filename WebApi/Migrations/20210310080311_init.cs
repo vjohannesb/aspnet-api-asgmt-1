@@ -11,7 +11,7 @@ namespace WebApi.Migrations
                 name: "Administrators",
                 columns: table => new
                 {
-                    AdminId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    AdminId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     AdminSalt = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
                     AdminHash = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(50)", nullable: false),
@@ -27,7 +27,7 @@ namespace WebApi.Migrations
                 name: "Customers",
                 columns: table => new
                 {
-                    CustomerId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(50)", nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(50)", nullable: false),
                     Email = table.Column<string>(type: "varchar(100)", nullable: false)
@@ -41,12 +41,13 @@ namespace WebApi.Migrations
                 name: "Tickets",
                 columns: table => new
                 {
-                    TicketId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TicketId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateUpdated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
-                    CustomerId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    AssignedAdminId = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AssignedAdminId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -56,13 +57,13 @@ namespace WebApi.Migrations
                         column: x => x.AssignedAdminId,
                         principalTable: "Administrators",
                         principalColumn: "AdminId",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Tickets_Customers_CustomerId",
                         column: x => x.CustomerId,
                         principalTable: "Customers",
                         principalColumn: "CustomerId",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(

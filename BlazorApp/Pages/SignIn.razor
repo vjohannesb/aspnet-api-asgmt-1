@@ -1,0 +1,76 @@
+﻿@page "/signin"
+@inject ILocalStorageService localStorage
+@inject HttpClient Http
+
+<h3>Sign in</h3>
+
+@if (!string.IsNullOrEmpty(_message))
+{
+    <h5>@_message</h5>
+}
+
+<EditForm Model="@signInModel" OnValidSubmit="@Login">
+    <div class="form-group">
+
+        <label>Email</label>
+        <InputText type="email" id="email" class="form-control"
+                   @bind-Value="signInModel.Email" />
+
+        <label>Password</label>
+        <InputText type="password" id="password" class="form-control"
+                   @bind-Value="signInModel.Password" />
+
+        <button type="submit" class="btn btn-success mt-3">
+            Sign in
+        </button>
+    </div>
+</EditForm>
+
+
+@code {
+    private string _message;
+    private string _url = "https://localhost:44330/api/admin/signin";
+    private string _validateUrl = "https://localhost:44330/api/admin/validate";
+
+    private SignInModel signInModel;
+
+    protected override async Task OnInitializedAsync()
+    {
+        signInModel = new SignInModel();
+
+        try
+        {
+            var _token = await localStorage.GetItemAsStringAsync("accessToken");
+            if (!string.IsNullOrEmpty(_token))
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, _validateUrl);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+                var response = await Http.SendAsync(request);
+                if (response.IsSuccessStatusCode)
+                    navigationManager.NavigateTo("/", forceLoad: true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Unhandled exception.\n{ex}");
+        }
+
+
+    }
+
+    private async Task Login()
+    {
+        var request = await Http.PostAsJsonAsync<SignInModel>(_url, signInModel);
+
+        if (request.IsSuccessStatusCode)
+        {
+            var response = await request.Content.ReadFromJsonAsync<ResponseModel>();
+            await localStorage.SetItemAsync<string>("accessToken", response.Token);
+            navigationManager.NavigateTo("/", forceLoad: true);
+        }
+
+        _message = "Unable to log in. Please try again.";
+
+    }
+}

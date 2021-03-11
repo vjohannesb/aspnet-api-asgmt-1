@@ -1,0 +1,176 @@
+﻿@page "/tickets/add"
+@inject HttpClient Http
+@inject ILogger<AddTicket> _logger
+
+<h3>Register new ticket</h3>
+<p class="text-black-50 font-monospace">@(now ?? "")</p>
+
+@if (!string.IsNullOrEmpty(_location))
+{
+    <div class="alert alert-success">
+        <span>Ticket created! </span>
+        <NavLink class="nav-link" href="@_location">Click here </NavLink>
+        to go to ticket.
+    </div>
+}
+else if (!string.IsNullOrEmpty(_error))
+{
+
+    <div class="alert alert-danger">
+        <span>Could not create ticket. </span>
+        <span>@_error</span>
+    </div>
+}
+
+@if (_administrators == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <EditForm Model="ticket" OnSubmit="SubmitTicket">
+
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <InputTextArea @bind-Value="@ticket.Description" class="form-control" rows="3" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Status</label>
+            <InputSelect @bind-Value="@ticket.Status" class="form-select" aria-label="Select ticket status">
+                <option value="@TicketStatus.Open">Open</option>
+                <option value="@TicketStatus.Active">Active</option>
+                <option value="@TicketStatus.Closed">Closed</option>
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Customer</label>
+            <InputSelect @bind-Value="@ticket.CustomerId" class="form-select" aria-label="Select a customer">
+                <option value="">Select a customer...</option>
+                @if (_customers != null)
+                    {
+                    @foreach (var customer in _customers)
+                        {
+                        <option value="@customer.Id">
+                            @customer.FirstName @customer.LastName
+                        </option>
+                        }
+                    }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Assign an administrator</label>
+            <InputSelect @bind-Value="@ticket.AssignedAdminId" class="form-select" aria-label="Select an administrator">
+                <option value="">Select an administrator...</option>
+                @if (_administrators != null)
+                    {
+                    @foreach (var admin in _administrators)
+                        {
+                        <option value="@admin.Id">
+                            @admin.DisplayName
+                        </option>
+                        }
+                    }
+            </InputSelect>
+        </div>
+
+        <button type="submit" class="btn btn-success">Add ticket</button>
+    </EditForm>
+}
+
+
+@code {
+    private string now;
+    private TicketRequestModel ticket;
+    private IEnumerable<AdminViewModel> _administrators;
+    private IEnumerable<CustomerModel> _customers;
+    private string _token;
+    private string _location;
+    private string _error;
+
+    private string _adminUrl = "https://localhost:44330/api/admin";
+    private string _customerUrl = "https://localhost:44330/api/customers";
+    private string _ticketUrl = "https://localhost:44330/api/tickets";
+
+    //GetAdministrators failar också om servern/API inte är uppe
+
+    protected override async Task OnInitializedAsync()
+    {
+        _token = await localStorage.GetItemAsStringAsync("accessToken");
+
+        _administrators = await GetAdministrators();
+        if (_administrators == null)
+        {
+            _logger.LogWarning("[401] Could not verify access token.");
+            navigationManager.NavigateTo("/signin");
+        }
+
+        _customers = await GetCustomers();
+        if (_customers == null)
+        {
+            _logger.LogWarning("Could not get customers.");
+        }
+
+        now = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+        ticket = new TicketRequestModel();
+    }
+
+    private async Task<IEnumerable<AdminViewModel>> GetAdministrators()
+    {
+        if (string.IsNullOrEmpty(_token))
+            return null;
+
+        var request = new HttpRequestMessage(HttpMethod.Get, _adminUrl);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+        var response = await Http.SendAsync(request);
+        if (response.IsSuccessStatusCode)
+            return await response.Content.ReadFromJsonAsync<IEnumerable<AdminViewModel>>();
+        else
+            return null;
+    }
+
+    private async Task<IEnumerable<CustomerModel>> GetCustomers()
+    {
+        if (string.IsNullOrEmpty(_token))
+            return null;
+
+        var request = new HttpRequestMessage(HttpMethod.Get, _customerUrl);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+        var response = await Http.SendAsync(request);
+        if (response.IsSuccessStatusCode)
+            return await response.Content.ReadFromJsonAsync<IEnumerable<CustomerModel>>();
+        else
+            return null;
+    }
+
+    private async Task SubmitTicket()
+    {
+        _logger.LogInformation("Submitting ticket...");
+        _location = string.Empty;
+        _error = string.Empty;
+
+        //var request = new HttpRequestMessage(HttpMethod.Post, _ticketUrl);
+        //request.Content = new StringContent(JsonConvert.SerializeObject(ticket), Encoding.UTF8, "application/json");
+        //request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+        //var response = await Http.PostAsJsonAsync<TicketRequestModel>(_ticketUrl, ticket);
+        //if (response.IsSuccessStatusCode)
+        //{
+        //    ticket = new TicketRequestModel();
+        //    _location = "/tickets/" + response.Headers.Location.LocalPath.Split("/").LastOrDefault();
+        //}
+        //else
+        //    _error = $"[{response.StatusCode}] {response.ReasonPhrase}";
+
+        var response = await TicketHandler.SubmitTicketAsync(_token, _ticketUrl, ticket);
+        if (response.Succeeded)
+            _location = response.Token;
+        else
+            _error = response.Token;
+
+    }
+}

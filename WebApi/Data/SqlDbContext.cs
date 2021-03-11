@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SharedLibrary.Models;
+using SharedLibrary.Models.Admin;
+using SharedLibrary.Models.Customer;
+using SharedLibrary.Models.Ticket;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,5 +19,7 @@ namespace WebApi.Data
         public DbSet<CustomerModel> Customers { get; set; }
 
         public DbSet<TicketModel> Tickets { get; set; }
+
+        //public DbSet<SessionToken> SessionTokens { get; set; }
     }
 }
