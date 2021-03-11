@@ -96,7 +96,9 @@ namespace WebApi.Controllers
                     throw;
             }
 
-            return CreatedAtAction(nameof(GetTicket), new { id = model.TicketId }, model);
+            // Location header = api/tickets/{ticketId} + en payload med TicketId som Result
+            return CreatedAtAction(nameof(GetTicket), new { id = ticket.TicketId }, 
+                new ResponseModel(true, ticket.TicketId.ToString()));
         }
 
         // DELETE: api/Tickets/5

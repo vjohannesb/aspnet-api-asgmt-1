@@ -1,0 +1,74 @@
+﻿@page "/customers/add"
+@inject HttpClient Http
+
+
+<h3>Register new customer</h3>
+<p class="text-black-50 font-monospace">@(now ?? "")</p>
+
+@if (_customer == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <EditForm Model="_customer" OnValidSubmit="SubmitTicket">
+        <DataAnnotationsValidator />
+
+        <div class="mb-3">
+            <label class="form-label">First Name</label>
+            <InputText @bind-Value="@_customer.FirstName" class="form-control" rows="3" />
+            <ValidationMessage For="() => _customer.FirstName" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Last Name</label>
+            <InputText @bind-Value="@_customer.LastName" class="form-control" rows="3" />
+            <ValidationMessage For="() => _customer.LastName" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Email address</label>
+            <InputText @bind-Value="@_customer.Email" class="form-control" rows="3" />
+            <ValidationMessage For="() => _customer.Email" />
+        </div>
+
+        <button type="submit" class="btn btn-success">Submit</button>
+    </EditForm>
+}
+
+@code {
+    private string now;
+    private string _token;
+    private string _error;
+
+    private CustomerRegisterModel _customer;
+
+    private string _customerUrl = "https://localhost:44330/api/customers";
+
+    //Get failar också om servern/API inte är uppe
+
+    protected override async Task OnInitializedAsync()
+    {
+        _customer = new CustomerRegisterModel();
+        _token = await localStorage.GetItemAsStringAsync("accessToken");
+        now = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+    }
+
+    private async Task SubmitTicket()
+    {
+        _error = string.Empty;
+
+        var request = new HttpRequestMessage(HttpMethod.Post, _customerUrl);
+        request.Content = new StringContent(JsonConvert.SerializeObject(_customer), Encoding.UTF8, "application/json");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+        var response = await Http.SendAsync(request);
+        if (response.IsSuccessStatusCode)
+        {
+            _customer = new CustomerRegisterModel();
+            var payload = await response.Content.ReadFromJsonAsync<ResponseModel>();
+        }
+        else
+            _error = $"[{(int)response.StatusCode}] {response.ReasonPhrase}";
+    }
+}

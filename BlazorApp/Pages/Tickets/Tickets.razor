@@ -1,6 +1,5 @@
 ﻿@page "/tickets"
-@inject HttpClient Http
-@inject ILogger<Index> _logger
+@inject ILogger<Tickets> _logger
 
 <h1>Tickets</h1>
 
@@ -16,14 +15,14 @@ else
         Add ticket
     </button>
 
-    <table class="table">
+    <table class="table table-hover table-striped table-sm align-middle font-monospace">
         <thead>
             <tr>
                 <th>ID</th>
+                <th>Description</th>
                 <th>Status</th>
                 <th>Created</th>
                 <th>Updated</th>
-                <th>Description</th>
                 <th>Customer</th>
                 <th>Administrator</th>
             </tr>
@@ -31,15 +30,7 @@ else
         <tbody>
             @foreach (var ticket in tickets)
             {
-                <tr>
-                    <td>@ticket.TicketId</td>
-                    <td>@Enum.GetName(typeof(TicketStatus), ticket.Status)</td>
-                    <td>@ticket.DateCreated.ToShortDateString()</td>
-                    <td>@ticket.DateUpdated.ToShortDateString()</td>
-                    <td>@ticket.Description</td>
-                    <td>@ticket.CustomerId</td>
-                    <td>@ticket.AssignedAdminId</td>
-                </tr>
+                <TicketListItem Ticket="@ticket" Token="@_token"/>
             }
         </tbody>
     </table>
@@ -48,10 +39,11 @@ else
 @code {
     private TicketModel[] tickets;
     private string _url = "https://localhost:44330/api/tickets";
+    private string _token;
 
     protected override async Task OnInitializedAsync()
     {
-        var _token = await localStorage.GetItemAsStringAsync("accessToken");
+        _token = await localStorage.GetItemAsStringAsync("accessToken");
 
         if (string.IsNullOrEmpty(_token))
             navigationManager.NavigateTo("/signin");
@@ -61,7 +53,6 @@ else
 
         try
         {
-            Console.WriteLine("Testing");
             var response = await Http.SendAsync(request);
 
             if (response.IsSuccessStatusCode)

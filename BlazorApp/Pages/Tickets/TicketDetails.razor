@@ -1,0 +1,45 @@
+﻿@page "/tickets/{id:guid}";
+
+<h3>TicketDetails</h3>
+@if (_ticket != null)
+{
+    <p>@_ticket.AssignedAdmin</p>
+    <p>@_ticket.Customer</p>
+    <p>@_ticket.DateCreated.ToString("yyyy-MM-dd HH:mm")</p>
+    <p>@_ticket.DateUpdated.ToString("yyyy-MM-dd HH:mm")</p>
+    <p>@_ticket.Description</p>
+    <p>@_ticket.Status</p>
+}
+else
+            {
+                <p>Loading...</p>
+            }
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private string _ticketUrl = "https://localhost:44330/api/tickets";
+
+    private TicketModel _ticket;
+    private string _token;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _token = await localStorage.GetItemAsStringAsync("accessToken");
+        _ticketUrl += $"/{Id.ToString()}";
+
+        if (!string.IsNullOrEmpty(_token))
+        {
+            using var _httpClient = new HttpClient();
+
+            var request = new HttpRequestMessage(HttpMethod.Get, _ticketUrl);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+            var response = await _httpClient.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+                _ticket = await response.Content.ReadFromJsonAsync<TicketModel>();
+        }
+    }
+}

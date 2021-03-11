@@ -19,11 +19,13 @@ a, .btn-link {
 }
 
 .valid.modified:not([type=checkbox]) {
-    outline: 1px solid #26b050;
+    border: 1px solid #26b050;
+    border-radius: .25rem;
 }
 
 .invalid {
-    outline: 1px solid red;
+    border: 1px solid red;
+    border-radius: .25rem;
 }
 
 .validation-message {

@@ -14,10 +14,14 @@ namespace SharedLibrary.Models.Ticket
     public class TicketModel
     {
 
-        public TicketModel() { }
+        public TicketModel()
+        {
+            TicketId = Guid.NewGuid();
+        }
 
         public TicketModel(TicketRequestModel trm)
         {
+            TicketId = Guid.NewGuid();
             Description = trm.Description;
             DateCreated = trm.DateCreated;
             DateUpdated = trm.DateUpdated;

@@ -1,0 +1,51 @@
+﻿@inherits ComponentBase
+
+<tr>
+    <td title="@Ticket.TicketId.ToString()" class="font-monospace">@_shortenedId...</td>
+    <td style="word-break: break-all; word-break: break-word; hyphens:auto; width: 35%; text-align: start;">
+        @Ticket.Description
+    </td>
+    <td>@Ticket.Status.ToString()</td>
+    <td>@Ticket.DateCreated.ToString("yyyy-MM-dd HH:mm")</td>
+    <td>@Ticket.DateUpdated.ToString("yyyy-MM-dd HH:mm")</td>
+    <td>@Ticket.Customer?.FirstName @Ticket.Customer?.LastName</td>
+    <td>@_assignedAdmin?.DisplayName</td>
+    <td>
+        <i class="far fa-edit me-2"></i>
+        <i class="far fa-trash-alt"></i>
+    </td>
+</tr>
+
+@code {
+    [Parameter]
+    public TicketModel Ticket { get; set; }
+
+    [Parameter]
+    public string Token { get; set; }
+
+    private AdminViewModel _assignedAdmin;
+    private string _shortenedId;
+    private string _adminUrl = "https://localhost:44330/api/admin";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Ticket == null)
+            return;
+
+        _shortenedId = Ticket.TicketId.ToString().Substring(0, 8);
+
+        if (Ticket.AssignedAdminId != null
+            && !string.IsNullOrEmpty(Token))
+        {
+            using var httpClient = new HttpClient();
+
+            _adminUrl += $"/{Ticket.AssignedAdminId?.ToString()}";
+            var request = new HttpRequestMessage(HttpMethod.Get, _adminUrl);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Token);
+
+            var response = await httpClient.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+                _assignedAdmin = await response.Content.ReadFromJsonAsync<AdminViewModel>();
+        }
+    }
+}

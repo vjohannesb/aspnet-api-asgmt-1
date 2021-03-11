@@ -26,12 +26,14 @@ namespace SharedLibrary.Models.Ticket
 
         public Guid TicketId { get; set; }
 
+        [Required(ErrorMessage = "Description required.")]
         public string Description { get; set; }
 
         public DateTime DateCreated { get; set; }
 
         public DateTime DateUpdated { get; set; }
 
+        [Required]
         public TicketStatus Status { get; set; }
 
         public Guid? CustomerId { get; set; }

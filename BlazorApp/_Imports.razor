@@ -16,9 +16,10 @@
 @using SharedLibrary.Models.Ticket;
 
 @using Blazored.LocalStorage;
-@using Microsoft.Extensions.Logging; 
+@using Microsoft.Extensions.Logging;
 @using Newtonsoft.Json;
 @using System.Text;
 
 @inject NavigationManager navigationManager
 @inject ILocalStorageService localStorage
+@inject HttpClient Http
