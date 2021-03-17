@@ -22,6 +22,10 @@ namespace SharedLibrary.Models.Admin
             Email = model.Email;
         }
 
+        [Key]
+        [Required]
+        public int AdminId { get; set; }
+
         [Required]
         [JsonIgnore]
         [Column(TypeName = "varbinary(max)")]

@@ -55,9 +55,9 @@ namespace WebApi
                 {
                     OnTokenValidated = context =>
                     {
-                        if (context.Principal.FindFirst("UserId")?.Value?.Length != 36)
+                        var parsed = int.TryParse(context.Principal.FindFirst("UserId").Value, out var id);
+                        if (!parsed || id < 1)
                             context.Fail("Unauthorized.");
-
                         return Task.CompletedTask;
                     }
                 };

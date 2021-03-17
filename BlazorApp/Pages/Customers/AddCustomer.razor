@@ -1,17 +1,32 @@
 ﻿@page "/customers/add"
-@inject HttpClient Http
+@inject ILogger<AddCustomer> _logger
+<ValidateToken />
 
 
 <h3>Register new customer</h3>
 <p class="text-black-50 font-monospace">@(now ?? "")</p>
 
+@if (!string.IsNullOrEmpty(_location))
+{
+    <div class="alert alert-success">
+        <span>Customer registered! </span>
+        <NavLink class="d-inline" role="button" @onclick="GoToCustomer">Go to customer</NavLink>
+    </div>
+}
+else if (!string.IsNullOrEmpty(_error))
+{
+    <div class="alert alert-danger">
+        <span>@_error</span>
+    </div>
+}
+
 @if (_customer == null)
 {
-    <p>Loading...</p>
+    <p>@_message</p>
 }
 else
 {
-    <EditForm Model="_customer" OnValidSubmit="SubmitTicket">
+    <EditForm Model="_customer" OnValidSubmit="SubmitCustomer">
         <DataAnnotationsValidator />
 
         <div class="mb-3">
@@ -32,43 +47,54 @@ else
             <ValidationMessage For="() => _customer.Email" />
         </div>
 
-        <button type="submit" class="btn btn-success">Submit</button>
+        <button type="submit" class="btn btn-success" disabled=@submitting>Submit</button>
+        <button class="btn btn-secondary ms-2" @onclick="GoToList" disabled=@submitting>Back to List</button>
     </EditForm>
 }
 
 @code {
     private string now;
-    private string _token;
     private string _error;
+    private string _location;
+    private string _message = "Loading...";
+    private bool submitting = false;
 
-    private CustomerRegisterModel _customer;
+    private CustomerModel _customer;
 
-    private string _customerUrl = "https://localhost:44330/api/customers";
+    private string _customersUrl = "https://localhost:44330/api/customers";
 
-    //Get failar också om servern/API inte är uppe
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        _customer = new CustomerRegisterModel();
-        _token = await localStorage.GetItemAsStringAsync("accessToken");
+        _customer = new CustomerModel();
         now = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+        _message = string.Empty;
     }
 
-    private async Task SubmitTicket()
+    private async Task SubmitCustomer()
     {
         _error = string.Empty;
+        _location = string.Empty;
+        _message = string.Empty;
+        submitting = true;
 
-        var request = new HttpRequestMessage(HttpMethod.Post, _customerUrl);
-        request.Content = new StringContent(JsonConvert.SerializeObject(_customer), Encoding.UTF8, "application/json");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
-
-        var response = await Http.SendAsync(request);
+        var response = await apiService.SendToAPIAsync(HttpMethod.Post, _customersUrl, _customer, true);
         if (response.IsSuccessStatusCode)
         {
-            _customer = new CustomerRegisterModel();
+            _customer = new CustomerModel();
             var payload = await response.Content.ReadFromJsonAsync<ResponseModel>();
+            _location = $"/customers/{payload.Result}";
         }
         else
-            _error = $"[{(int)response.StatusCode}] {response.ReasonPhrase}";
+        {
+            _error = $"Could not create customer. {(int)response.StatusCode} {response.ReasonPhrase}";
+            apiService.LogWarningIfDebug(await response.Content.ReadAsStringAsync(), _logger);
+        }
+        submitting = false;
     }
+
+    private void GoToCustomer()
+        => navigationManager.NavigateTo(_location);
+
+    private void GoToList()
+        => navigationManager.NavigateTo("/customers");
 }

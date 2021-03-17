@@ -34,11 +34,11 @@ namespace WebApi.Services
             try
             {
                 await _context.SaveChangesAsync();
-                return new CreatedAtActionResult("CreateCustomer", "Customers", new { id = model.Id }, model);
+                return new CreatedAtActionResult("CreateCustomer", "Customers", new { id = model.CustomerId }, model);
             } 
             catch (DbUpdateException)
             {
-                if (CustomerExists(model.Id))
+                if (CustomerExists(model.CustomerId))
                     return new ConflictResult();
                 else
                     // Log?
@@ -56,7 +56,7 @@ namespace WebApi.Services
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!CustomerExists(model.Id))
+                if (!CustomerExists(model.CustomerId))
                     return new NotFoundObjectResult(model);
                 else
                     throw;
@@ -65,8 +65,8 @@ namespace WebApi.Services
             return new NoContentResult();
         }
 
-        private bool CustomerExists(Guid id)
-            => _context.Customers.Any(c => c.Id == id);
+        private bool CustomerExists(int id)
+            => _context.Customers.Any(c => c.CustomerId == id);
 
         private bool EmailAlreadyRegistered(string email)
             => _context.Customers.Any(c => c.Email == email);
@@ -128,7 +128,7 @@ namespace WebApi.Services
             return new NoContentResult();
         }
 
-        private bool TicketExists(Guid id)
+        private bool TicketExists(int id)
             => _context.Tickets.Any(t => t.TicketId == id);
     }
 }

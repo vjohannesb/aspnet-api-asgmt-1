@@ -1,0 +1,73 @@
+﻿@page "/customers"
+@inject ILogger<CustomerList> _logger
+<ValidateToken />
+
+<h1>Customers</h1>
+
+<button @onclick="AddCustomer" class="btn btn-secondary mb-3 p-2">
+    <span class="oi oi-plus" aria-hidden="true"></span>
+    Add customer
+</button>
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <div class="alert alert-danger">
+        <span>@_error</span>
+    </div>
+}
+
+@if (_customers == null || _customers.Length < 1)
+{
+    <p>@_message</p>
+}
+else
+{
+
+    <table class="table font-monospace">
+        <caption>List of customers</caption>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var customer in _customers)
+            {
+                <tr>
+                    <td>@customer.CustomerId</td>
+                    <td>@customer.FirstName @customer.LastName</td>
+                    <td>@customer.Email</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private CustomerModel[] _customers;
+    private string _customersUrl = "https://localhost:44330/api/customers";
+
+    private string _message = "Loading...";
+    private string _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await apiService.SendToAPIAsync(HttpMethod.Get, _customersUrl, auth: true);
+        if (response.IsSuccessStatusCode)
+            _customers = await response.Content.ReadFromJsonAsync<CustomerModel[]>();
+        else if (response.StatusCode == HttpStatusCode.Unauthorized)
+            navigationManager.NavigateTo("/signin");
+        else
+        {
+            _error = $"Error loading customers. {(int)response.StatusCode} {response.ReasonPhrase}";
+            apiService.LogWarningIfDebug(await response.Content.ReadAsStringAsync(), _logger);
+        }
+
+        _message = string.Empty;
+    }
+
+    private void AddCustomer()
+        => navigationManager.NavigateTo("/customers/add");
+}

@@ -13,19 +13,18 @@ namespace SharedLibrary.Models
 {
     public class UserModel
     {
-        [Key]
-        [Required]
-        public Guid Id { get; set; }
-
-        [Required]
+        [Required(ErrorMessage = "A first name of between 1 and 50 characters is required.")]
+        [StringLength(50, MinimumLength = 1, ErrorMessage = "A first name of between 2 and 50 characters is required.")]
         [Column(TypeName = "nvarchar(50)")]
         public string FirstName { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "A last name of between 1 and 50 characters is required.")]
+        [StringLength(50, MinimumLength = 1, ErrorMessage = "A last name of between 2 and 50 characters is required.")]
         [Column(TypeName = "nvarchar(50)")]
         public string LastName { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Email address is required.")]
+        [EmailAddress]
         [Column(TypeName = "varchar(100)")]
         public string Email { get; set; }
 

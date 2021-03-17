@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SharedLibrary.Models;
 using SharedLibrary.Models.Customer;
 using WebApi.Data;
 
@@ -32,7 +33,7 @@ namespace WebApi.Controllers
 
         // GET: api/Customers/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<CustomerModel>> GetCustomerModel(Guid id)
+        public async Task<ActionResult<CustomerModel>> GetCustomer(int id)
         {
             var customerModel = await _context.Customers.FindAsync(id);
 
@@ -45,14 +46,11 @@ namespace WebApi.Controllers
         }
 
         // PUT: api/Customers/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCustomerModel(Guid id, CustomerModel customerModel)
+        public async Task<IActionResult> PutCustomer(int id, CustomerModel customerModel)
         {
-            if (id != customerModel.Id)
-            {
+            if (id != customerModel.CustomerId)
                 return BadRequest();
-            }
 
             _context.Entry(customerModel).State = EntityState.Modified;
 
@@ -62,33 +60,29 @@ namespace WebApi.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!CustomerModelExists(id))
-                {
+                if (!CustomerExists(id))
                     return NotFound();
-                }
                 else
-                {
                     throw;
-                }
             }
 
             return NoContent();
         }
 
         // POST: api/Customers
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<CustomerModel>> PostCustomerModel(CustomerModel customerModel)
+        public async Task<ActionResult<CustomerModel>> PostCustomer(CustomerModel customerModel)
         {
             _context.Customers.Add(customerModel);
             await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetCustomerModel", new { id = customerModel.Id }, customerModel);
+            // Location header = api/customers/{customerId} + en payload med CustomerId som Result
+            return CreatedAtAction(nameof(GetCustomer), new { id = customerModel.CustomerId },
+                new ResponseModel(true, customerModel.CustomerId.ToString()));
         }
 
         // DELETE: api/Customers/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCustomerModel(Guid id)
+        public async Task<IActionResult> DeleteCustomer(int id)
         {
             var customerModel = await _context.Customers.FindAsync(id);
             if (customerModel == null)
@@ -102,9 +96,9 @@ namespace WebApi.Controllers
             return NoContent();
         }
 
-        private bool CustomerModelExists(Guid id)
+        private bool CustomerExists(int id)
         {
-            return _context.Customers.Any(e => e.Id == id);
+            return _context.Customers.Any(c => c.CustomerId == id);
         }
     }
 }

@@ -1,0 +1,125 @@
+﻿@page "/tickets"
+@inject ILogger<TicketList> _logger
+<ValidateToken />
+
+<h1>Tickets</h1>
+
+
+<button @onclick="AddTicket" class="btn btn-primary mb-3 p-2">
+    <span class="oi oi-plus" aria-hidden="true"></span>
+    Add ticket
+</button>
+
+<button @onclick="RefreshList" class="btn btn-secondary mb-3 p-2" disabled=@_refreshing>
+    <span class="oi oi-reload" aria-hidden="true"></span>
+    Refresh
+</button>
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <div class="alert alert-danger">
+        <span>@_error</span>
+    </div>
+}
+
+@if (tickets == null || tickets.Length < 1)
+{
+    <p>@_message</p>
+}
+else
+{
+    <table class="table table-hover table-striped table-sm align-middle font-monospace">
+        <caption>List of tickets</caption>
+        <thead>
+            <tr class="text-center">
+                <th>
+                    <a @onclick='() => SortBy("id")' role="button">ID</a>
+                </th>
+                <th>Description</th>
+                <th>
+                    <a @onclick='() => SortBy("status")' role="button">Status</a>
+                </th>
+                <th>
+                    <a @onclick='() => SortBy("created")' role="button">Created</a>
+                </th>
+                <th>
+                    <a @onclick='() => SortBy("updated")' role="button">Updated</a>
+                </th>
+                <th>
+                    <a @onclick='() => SortBy("admin")' role="button">Administrator</a>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var ticket in tickets)
+            {
+                <TicketListItem Ticket="@ticket" />
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private TicketModel[] tickets;
+    private string _ticketsUrl = "https://localhost:44330/api/tickets";
+    private bool _refreshing = false;
+
+    private string _sortOrder = "asc";
+    private string _currentFilter;
+
+    private string _message = "Loading...";
+    private string _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateList(_ticketsUrl);
+    }
+
+    private async Task SortBy(string filter)
+    {
+        if (_currentFilter == filter)
+            _sortOrder = _sortOrder == "asc" ? "desc" : "asc";
+        else
+            _sortOrder = "asc";
+
+        await UpdateList($"{_ticketsUrl}?sort={filter}&order={_sortOrder}");
+        _currentFilter = filter;
+    }
+
+    private async Task UpdateList(string url)
+    {
+        var response = await apiService.SendToAPIAsync(HttpMethod.Get, url, auth: true);
+        if (response.IsSuccessStatusCode)
+        {
+            tickets = await response.Content.ReadFromJsonAsync<TicketModel[]>();
+
+            if (tickets.Length < 1)
+                _message = "No tickets available.";
+            else
+                _message = string.Empty;
+        }
+        else if (response.StatusCode == HttpStatusCode.Unauthorized)
+            navigationManager.NavigateTo("/signin");
+        else
+        {
+            _error = $"Error loading tickets. {(int)response.StatusCode} {response.ReasonPhrase}";
+            apiService.LogWarningIfDebug(await response.Content.ReadAsStringAsync(), _logger);
+            _message = string.Empty;
+        }
+    }
+
+    private async Task RefreshList()
+    {
+        if (!_refreshing)
+        {
+            _refreshing = true;
+            await UpdateList(_ticketsUrl);
+            _refreshing = false;
+            StateHasChanged();
+        }
+    }
+
+    private void AddTicket()
+    => navigationManager.NavigateTo("/tickets/add");
+
+}

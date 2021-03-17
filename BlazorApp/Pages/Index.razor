@@ -1,4 +1,16 @@
 ﻿@page "/"
+<ValidateToken />
 
-<h1 class="text-center">Welcome!</h1>
+<h1 class="text-center mt-5 justify-">Welcome@(_displayName != null ? " " + _displayName : "")!</h1>
 
+@code {
+
+    private string _displayName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tokenDisplayName = await apiService.GetDisplayName();
+        if (tokenDisplayName != null)
+            _displayName = tokenDisplayName;
+    }
+} 

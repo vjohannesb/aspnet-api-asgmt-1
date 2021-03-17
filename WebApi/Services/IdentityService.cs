@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using SharedLibrary.Models;
 using SharedLibrary.Models.Admin;
 using System;
 using System.Collections.Generic;
@@ -52,19 +53,18 @@ namespace WebApi.Services
             }
             catch (DbUpdateException)
             {
-                // Om id osannolikt nog redan finns registrerat
-                if (AdminExists(admin.Id))
-                    return new ConflictObjectResult(new { id = admin.Id });
+                if (AdminExists(admin.AdminId))
+                    return new ConflictObjectResult(new { id = admin.AdminId });
                 else
                     throw;
             }
 
-            // Returnera bara id & email (ej lösen), något extra säkert
+            // Returnera ej lösen, något extra säkert
             return new CreatedAtActionResult(
                 "GetAdmin", 
                 "Admin",
-                new { id = admin.Id },
-                new { id = admin.Id, email = admin.Email }
+                new { id = admin.AdminId },
+                new { id = admin.AdminId, email = admin.Email }
                 );
 
         }
@@ -84,34 +84,34 @@ namespace WebApi.Services
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new Claim[] { new Claim("UserId", admin.Id.ToString()) }),
+                Subject = new ClaimsIdentity(new Claim[] 
+                    { 
+                        new Claim("UserId", admin.AdminId.ToString()),
+                        new Claim("DisplayName", $"{admin.FirstName} {admin.LastName}")
+                    }),
                 IssuedAt = DateTime.UtcNow,
                 Expires = DateTime.UtcNow.AddHours(2),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(_secretKey), SecurityAlgorithms.HmacSha512Signature)
             };
 
-            //var _accessToken = new SessionToken {
-            //    Id = admin.Id,
-            //    AccessToken = tokenHandler.WriteToken(tokenHandler.CreateToken(tokenDescriptor))
-            //};
-
             var _accessToken = tokenHandler.WriteToken(tokenHandler.CreateToken(tokenDescriptor));
-
-            //if (AdminTokenIssued(admin.Id))
-            //    _context.SessionTokens.Update(_accessToken);
-            //else
-            //    _context.SessionTokens.Add(_accessToken);
 
             return new ResponseModel(true, _accessToken);
         }
 
-        //private bool AdminTokenIssued(string id)
-        //    => _context.SessionTokens.Any(st => st.Id == id);
+        // *** FIXA ***
+        // *** FIXA ***
+        // *** FIXA ***
+        // *** FIXA ***
+        public async Task<ActionResult> SignOutAsync(int id)
+        {
+            return new OkResult();
+        }
 
         private bool EmailRegistered(string email)
             => _context.Administrators.Any(a => a.Email == email);
 
-        private bool AdminExists(Guid id)
-            => _context.Administrators.Any(a => a.Id == id);
+        private bool AdminExists(int id)
+            => _context.Administrators.Any(a => a.AdminId == id);
     }
 }

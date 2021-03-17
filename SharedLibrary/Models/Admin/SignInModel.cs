@@ -5,26 +5,13 @@ namespace SharedLibrary.Models.Admin
 {
     public class SignInModel
     {
-        [Required]
-        [StringLength(100, MinimumLength = 5, ErrorMessage = "Email must be at least 5 characters long.")]
+        [Required(ErrorMessage = "Email address is required.")]
         [DataType(DataType.EmailAddress)]
+        [EmailAddress]
         public string Email { get; set; }
 
+        [Required(ErrorMessage = "Please enter your password.")]
         [DataType(DataType.Password)]
         public string Password { get; set; }
-    }
-
-    public class ResponseModel
-    {
-        public ResponseModel(bool succeeded, string token)
-        {
-            Succeeded = succeeded;
-            Token = token;
-        }
-
-        public bool Succeeded { get; set; }
-
-        public string Token { get; set; }
-
     }
 }

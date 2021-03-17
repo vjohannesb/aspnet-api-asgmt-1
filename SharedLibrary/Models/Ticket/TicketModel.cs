@@ -16,23 +16,11 @@ namespace SharedLibrary.Models.Ticket
 
         public TicketModel()
         {
-            TicketId = Guid.NewGuid();
-        }
-
-        public TicketModel(TicketRequestModel trm)
-        {
-            TicketId = Guid.NewGuid();
-            Description = trm.Description;
-            DateCreated = trm.DateCreated;
-            DateUpdated = trm.DateUpdated;
-            Status = trm.Status;
-            CustomerId = trm.CustomerId;
-            AssignedAdminId = trm.AssignedAdminId;
         }
 
         [Key]
         [Required]
-        public Guid TicketId { get; set; }
+        public int TicketId { get; set; }
 
         [Required]
         [Column(TypeName = "nvarchar(max)")]
@@ -47,10 +35,10 @@ namespace SharedLibrary.Models.Ticket
         [Required]
         public TicketStatus Status { get; set; }
 
-        public virtual Guid? CustomerId { get; set; }
+        public virtual int? CustomerId { get; set; }
         public virtual CustomerModel Customer { get; set; }
 
-        public virtual Guid? AssignedAdminId { get; set; }
+        public virtual int? AssignedAdminId { get; set; }
         public virtual AdminModel AssignedAdmin { get; set; }
     }
 

@@ -14,12 +14,12 @@ namespace SharedLibrary.Models.Admin
 
         public AdminViewModel(AdminModel am)
         {
-            Id = am.Id;
+            AdminId = am.AdminId;
             DisplayName = $"{am.FirstName} {am.LastName}";
             Email = am.Email;
         }
 
-        public Guid Id { get; set; }
+        public int AdminId { get; set; }
         public string DisplayName { get; set; }
         public string Email { get; set; }
     }

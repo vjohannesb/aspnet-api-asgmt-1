@@ -1,0 +1,107 @@
+﻿@page "/register"
+@inject ILogger<Register> _logger;
+
+<h3>Register</h3>
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <div class="alert alert-danger">
+        <span>@_error</span>
+    </div>
+}
+
+@if (_registerModel != null)
+{
+    <EditForm Model="@_registerModel" OnValidSubmit="@RegisterAdmin">
+        <DataAnnotationsValidator />
+
+        <div class="form-group mb-3">
+            <label>First name</label>
+            <InputText type="text" id="firstname" class="form-control"
+                       @bind-Value="_registerModel.FirstName" />
+            <ValidationMessage For="() => _registerModel.FirstName" />
+
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Last name</label>
+            <InputText type="text" id="lastname" class="form-control"
+                       @bind-Value="_registerModel.LastName" />
+            <ValidationMessage For="() => _registerModel.LastName" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Email</label>
+            <InputText type="email" id="email" class="form-control"
+                       @bind-Value="_registerModel.Email" />
+            <ValidationMessage For="() => _registerModel.Email" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Password</label>
+            <InputText type="password" id="password" class="form-control"
+                       @bind-Value="_registerModel.Password" />
+            <ValidationMessage For="() => _registerModel.Password" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Confirm Password</label>
+            <InputText type="password" id="confirm-password" class="form-control"
+                       @bind-Value="_registerModel.ConfirmPassword" />
+            <ValidationMessage For="() => _registerModel.ConfirmPassword" />
+        </div>
+
+        <div class="form-group mb-3">
+            <button type="submit" class="btn btn-success mt-3" disabled=@submitting>
+                Register & sign in
+            </button>
+        </div>
+    </EditForm>
+
+}
+@code {
+    private string _error;
+    private string _registerUrl = "https://localhost:44330/api/admin/register";
+    private string _signInUrl = "https://localhost:44330/api/admin/signin";
+    private string _validateUrl = "https://localhost:44330/api/admin/validate";
+
+    private bool submitting = false;
+
+    private RegisterModel _registerModel;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _error = string.Empty;
+        var response = await apiService.SendToAPIAsync(HttpMethod.Post, _validateUrl, auth: true);
+        if (response.IsSuccessStatusCode)
+            navigationManager.NavigateTo("/");
+
+        _registerModel = new RegisterModel();
+    }
+
+    private async Task RegisterAdmin()
+    {
+        _error = string.Empty;
+
+        var response = await apiService.SendToAPIAsync(HttpMethod.Post, _registerUrl, _registerModel);
+        if (response.IsSuccessStatusCode)
+        {
+            var email = _registerModel.Email;
+            var password = _registerModel.Password;
+
+            var signin = await apiService.SendToAPIAsync(HttpMethod.Post, _signInUrl, new { email, password });
+            if (signin.IsSuccessStatusCode)
+                navigationManager.NavigateTo("/");
+            else
+            {
+                _error = $"Could not sign in. {(int)response.StatusCode} {response.ReasonPhrase}";
+                apiService.LogWarningIfDebug(await response.Content.ReadAsStringAsync(), _logger);
+            }
+        }
+        else
+        {
+            _error = $"Could not register. {(int)response.StatusCode} {response.ReasonPhrase}";
+            apiService.LogWarningIfDebug(await response.Content.ReadAsStringAsync(), _logger);
+        }
+    }
+}

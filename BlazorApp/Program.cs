@@ -21,6 +21,7 @@ namespace BlazorApp
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
             builder.Services.AddBlazoredLocalStorage();
+            builder.Services.AddScoped<Services.IAPIService, Services.APIService>();
 
             await builder.Build().RunAsync();
         }

@@ -11,11 +11,12 @@ namespace WebApi.Migrations
                 name: "Administrators",
                 columns: table => new
                 {
-                    AdminId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AdminId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     AdminSalt = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
                     AdminHash = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
-                    FirstName = table.Column<string>(type: "nvarchar(50)", nullable: false),
-                    LastName = table.Column<string>(type: "nvarchar(50)", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Email = table.Column<string>(type: "varchar(100)", nullable: false)
                 },
                 constraints: table =>
@@ -27,9 +28,10 @@ namespace WebApi.Migrations
                 name: "Customers",
                 columns: table => new
                 {
-                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    FirstName = table.Column<string>(type: "nvarchar(50)", nullable: false),
-                    LastName = table.Column<string>(type: "nvarchar(50)", nullable: false),
+                    CustomerId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FirstName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Email = table.Column<string>(type: "varchar(100)", nullable: false)
                 },
                 constraints: table =>
@@ -41,13 +43,14 @@ namespace WebApi.Migrations
                 name: "Tickets",
                 columns: table => new
                 {
-                    TicketId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TicketId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateUpdated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
-                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    AssignedAdminId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    CustomerId = table.Column<int>(type: "int", nullable: true),
+                    AssignedAdminId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -57,13 +60,13 @@ namespace WebApi.Migrations
                         column: x => x.AssignedAdminId,
                         principalTable: "Administrators",
                         principalColumn: "AdminId",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Tickets_Customers_CustomerId",
                         column: x => x.CustomerId,
                         principalTable: "Customers",
                         principalColumn: "CustomerId",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(

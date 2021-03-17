@@ -1,0 +1,8 @@
+﻿.table-description {
+    word-break: break-word;
+    word-break: break-all;
+    hyphens: auto;
+    text-align: start;
+    max-width: 500px;
+    width: max-content;
+}

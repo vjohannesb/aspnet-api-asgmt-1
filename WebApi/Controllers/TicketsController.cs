@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SharedLibrary.Models;
 using SharedLibrary.Models.Admin;
 using SharedLibrary.Models.Ticket;
@@ -19,40 +20,56 @@ namespace WebApi.Controllers
     public class TicketsController : ControllerBase
     {
         private readonly SqlDbContext _context;
+        private readonly ILogger<TicketsController> _logger;
 
-        public TicketsController(SqlDbContext context)
+        public TicketsController(SqlDbContext context, ILogger<TicketsController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: api/Tickets
+        // sort/order hämtas från querystring automatiskt
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TicketRequestModel>>> GetTickets()
+        public async Task<ActionResult<IEnumerable<TicketModel>>> GetTickets(string sort = null, string order = null)
         {
             var tickets = await _context.Tickets.ToListAsync();
-            var requestModels = tickets.Select(ticket => new TicketRequestModel(ticket)); 
-            return new OkObjectResult(requestModels);
+            if (string.IsNullOrEmpty(sort))
+                return Ok(tickets);
+
+            _logger.LogInformation($"Sort: {sort} -/- Order: {order}");
+
+            order ??= "asc";
+
+            switch (sort)
+            {
+                case "id":
+                    tickets = tickets.OrderBy(t => t.TicketId.ToString()).ToList();
+                    break;
+                case "status":
+                    tickets = tickets.OrderBy(t => t.Status).ToList();
+                    break;
+                default:
+                    break;
+            }
+
+            return new OkObjectResult(tickets);
         }
 
         // GET: api/Tickets/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<TicketModel>> GetTicket(Guid id)
+        public async Task<ActionResult<TicketModel>> GetTicket(int id)
         {
             var ticket = await _context.Tickets.FindAsync(id);
-
-            if (ticket == null)
-                return NotFound();
-
-            var requestModel = new TicketRequestModel(ticket);
-
-            return new OkObjectResult(requestModel);
+            return ticket == null 
+                ? NotFound() 
+                : Ok(ticket);
         }
 
         // PUT: api/Tickets/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTicket(Guid id, TicketRequestModel model)
+        public async Task<IActionResult> PutTicket(int id, TicketModel ticket)
         {
-            var ticket = new TicketModel(model);
             ticket.DateUpdated = DateTime.UtcNow;
 
             if (id != ticket.TicketId)
@@ -77,13 +94,12 @@ namespace WebApi.Controllers
 
         // POST: api/Tickets
         [HttpPost]
-        public async Task<ActionResult<TicketModel>> PostTicket(TicketRequestModel model)
+        public async Task<ActionResult<TicketModel>> PostTicket(TicketModel ticket)
         {
-            var ticket = new TicketModel(model);
             ticket.DateCreated = DateTime.UtcNow;
             ticket.DateUpdated = DateTime.UtcNow;
-
             _context.Tickets.Add(ticket);
+
             try
             {
                 await _context.SaveChangesAsync();
@@ -103,7 +119,7 @@ namespace WebApi.Controllers
 
         // DELETE: api/Tickets/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTicket(Guid id)
+        public async Task<IActionResult> DeleteTicket(int id)
         {
             var ticketModel = await _context.Tickets.FindAsync(id);
             if (ticketModel == null)
@@ -117,7 +133,7 @@ namespace WebApi.Controllers
             return NoContent();
         }
 
-        private bool TicketModelExists(Guid id)
+        private bool TicketModelExists(int id)
             => _context.Tickets.Any(e => e.TicketId == id);
     }
 }

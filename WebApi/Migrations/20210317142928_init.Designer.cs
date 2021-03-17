@@ -10,8 +10,8 @@ using WebApi.Data;
 namespace WebApi.Migrations
 {
     [DbContext(typeof(SqlDbContext))]
-    [Migration("20210310080850_nullable_guid")]
-    partial class nullable_guid
+    [Migration("20210317142928_init")]
+    partial class init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -23,9 +23,10 @@ namespace WebApi.Migrations
 
             modelBuilder.Entity("SharedLibrary.Models.Admin.AdminModel", b =>
                 {
-                    b.Property<Guid>("AdminId")
+                    b.Property<int>("AdminId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<byte[]>("AdminHash")
                         .IsRequired()
@@ -41,10 +42,12 @@ namespace WebApi.Migrations
 
                     b.Property<string>("FirstName")
                         .IsRequired()
+                        .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("LastName")
                         .IsRequired()
+                        .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("AdminId");
@@ -52,11 +55,12 @@ namespace WebApi.Migrations
                     b.ToTable("Administrators");
                 });
 
-            modelBuilder.Entity("SharedLibrary.Models.CustomerModel", b =>
+            modelBuilder.Entity("SharedLibrary.Models.Customer.CustomerModel", b =>
                 {
-                    b.Property<Guid>("CustomerId")
+                    b.Property<int>("CustomerId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -64,10 +68,12 @@ namespace WebApi.Migrations
 
                     b.Property<string>("FirstName")
                         .IsRequired()
+                        .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("LastName")
                         .IsRequired()
+                        .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("CustomerId");
@@ -75,17 +81,18 @@ namespace WebApi.Migrations
                     b.ToTable("Customers");
                 });
 
-            modelBuilder.Entity("SharedLibrary.Models.TicketModel", b =>
+            modelBuilder.Entity("SharedLibrary.Models.Ticket.TicketModel", b =>
                 {
-                    b.Property<Guid>("TicketId")
+                    b.Property<int>("TicketId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<Guid?>("AssignedAdminId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("AssignedAdminId")
+                        .HasColumnType("int");
 
-                    b.Property<Guid?>("CustomerId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
@@ -109,13 +116,13 @@ namespace WebApi.Migrations
                     b.ToTable("Tickets");
                 });
 
-            modelBuilder.Entity("SharedLibrary.Models.TicketModel", b =>
+            modelBuilder.Entity("SharedLibrary.Models.Ticket.TicketModel", b =>
                 {
                     b.HasOne("SharedLibrary.Models.Admin.AdminModel", "AssignedAdmin")
-                        .WithMany("AssignedTickets")
+                        .WithMany("Tickets")
                         .HasForeignKey("AssignedAdminId");
 
-                    b.HasOne("SharedLibrary.Models.CustomerModel", "Customer")
+                    b.HasOne("SharedLibrary.Models.Customer.CustomerModel", "Customer")
                         .WithMany("Tickets")
                         .HasForeignKey("CustomerId");
 
@@ -126,10 +133,10 @@ namespace WebApi.Migrations
 
             modelBuilder.Entity("SharedLibrary.Models.Admin.AdminModel", b =>
                 {
-                    b.Navigation("AssignedTickets");
+                    b.Navigation("Tickets");
                 });
 
-            modelBuilder.Entity("SharedLibrary.Models.CustomerModel", b =>
+            modelBuilder.Entity("SharedLibrary.Models.Customer.CustomerModel", b =>
                 {
                     b.Navigation("Tickets");
                 });
