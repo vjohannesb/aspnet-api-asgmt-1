@@ -1,0 +1,13 @@
+﻿@page "/signout"
+
+<h3>SignOut</h3>
+
+@code {
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await apiService.SignOut();
+        navigationManager.NavigateTo("/signin", forceLoad: true);
+    }
+}

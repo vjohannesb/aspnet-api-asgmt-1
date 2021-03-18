@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using SharedLibrary.Models;
+using SharedLibrary.Models.Admin;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,8 +13,11 @@ namespace BlazorApp.Services
 {
     public interface IAPIService
     {
+        public Task SignOut();
+
         public Task<HttpResponseMessage> SendToAPIAsync(HttpMethod method, string url, object serializeContent = null, bool auth = false);
 
+        public Task<HttpResponseMessage> SignIn(SignInModel model);
         //public Task<HttpStatusCode> ValidateTokenAsync();
 
         public Task<string> GetTokenAsync();

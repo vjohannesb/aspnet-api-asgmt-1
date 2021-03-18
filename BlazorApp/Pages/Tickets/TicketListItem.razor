@@ -1,17 +1,21 @@
 ﻿@inherits ComponentBase
 
-<tr>
-    <td title="@Ticket.TicketId.ToString()" class="font-monospace">@_shortenedId...</td>
-    <td class="table-description">
+<tr @onclick="() => GoToDetails(Ticket.TicketId)">
+    <td class="text-center text-muted">@Ticket.TicketId.ToString()</td>
+    <td class="table-description" title="@Ticket.Description">
         @Ticket.Description
     </td>
     <td class="text-center">@Ticket.Status.ToString()</td>
     <td class="text-center">@Ticket.DateCreated.ToString("yyyy-MM-dd HH:mm")</td>
     <td class="text-center">@Ticket.DateUpdated.ToString("yyyy-MM-dd HH:mm")</td>
-    <td class="text-center">@_assignedAdmin?.DisplayName</td>
-    <td>
-        <i class="far fa-edit me-2"></i>
-        <i class="far fa-trash-alt"></i>
+    <td class="text-center">@Ticket.Customer?.DisplayName</td>
+    <td class="text-center">
+        <a class="text-reset" role="button" href="tickets/@Ticket.TicketId/edit">
+            <i class="far fa-edit me-2"></i>
+        </a>
+        <a class="text-reset" role="button" href="tickets/@Ticket.TicketId/delete">
+            <i class="far fa-trash-alt"></i>
+        </a>
     </td>
 </tr>
 
@@ -19,24 +23,12 @@
     [Parameter]
     public TicketModel Ticket { get; set; }
 
-    private AdminViewModel _assignedAdmin;
-    private string _shortenedId;
-    private string _adminUrl = "https://localhost:44330/api/admin";
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        if (Ticket == null) return;
-
-        _shortenedId = Ticket.TicketId.ToString().Substring(0, 8);
-
-        if (Ticket.AssignedAdminId != null)
-        {
-            _adminUrl += $"/{Ticket.AssignedAdminId.ToString()}";
-            var response = await apiService.SendToAPIAsync(HttpMethod.Get, _adminUrl, auth: true);
-            if (response.IsSuccessStatusCode)
-                _assignedAdmin = await response.Content.ReadFromJsonAsync<AdminViewModel>();
-            else
-                _assignedAdmin = new AdminViewModel { DisplayName = "Error Error" };
-        }
+        if (Ticket == null)
+            return;
     }
+
+    private void GoToDetails(int id)
+        => navigationManager.NavigateTo($"/tickets/{id}");
 }

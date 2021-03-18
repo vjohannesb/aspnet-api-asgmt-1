@@ -46,7 +46,9 @@ else
                     <a @onclick='() => SortBy("updated")' role="button">Updated</a>
                 </th>
                 <th>
-                    <a @onclick='() => SortBy("admin")' role="button">Administrator</a>
+                    <a @onclick='() => SortBy("customer")' role="button">Customer</a>
+                </th>
+                <th>
                 </th>
             </tr>
         </thead>
@@ -64,7 +66,7 @@ else
     private string _ticketsUrl = "https://localhost:44330/api/tickets";
     private bool _refreshing = false;
 
-    private string _sortOrder = "asc";
+    private string _sortOrder = "desc";
     private string _currentFilter;
 
     private string _message = "Loading...";
@@ -78,9 +80,9 @@ else
     private async Task SortBy(string filter)
     {
         if (_currentFilter == filter)
-            _sortOrder = _sortOrder == "asc" ? "desc" : "asc";
+            _sortOrder = _sortOrder == "desc" ? "asc" : "desc";
         else
-            _sortOrder = "asc";
+            _sortOrder = "desc";
 
         await UpdateList($"{_ticketsUrl}?sort={filter}&order={_sortOrder}");
         _currentFilter = filter;

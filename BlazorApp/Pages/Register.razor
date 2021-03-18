@@ -1,5 +1,5 @@
 ﻿@page "/register"
-@inject ILogger<Register> _logger;
+@inject ILogger<Register> _logger
 
 <h3>Register</h3>
 
@@ -89,9 +89,9 @@
             var email = _registerModel.Email;
             var password = _registerModel.Password;
 
-            var signin = await apiService.SendToAPIAsync(HttpMethod.Post, _signInUrl, new { email, password });
+            var signin = await apiService.SignIn(new SignInModel { Email = email, Password = password });
             if (signin.IsSuccessStatusCode)
-                navigationManager.NavigateTo("/");
+                navigationManager.NavigateTo("/", forceLoad: true);
             else
             {
                 _error = $"Could not sign in. {(int)response.StatusCode} {response.ReasonPhrase}";

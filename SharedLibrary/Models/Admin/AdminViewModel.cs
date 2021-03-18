@@ -9,7 +9,7 @@ namespace SharedLibrary.Models.Admin
 {
     public class AdminViewModel
     {
-        // För JSON-serializing från AdminModel till AdminViewModel
+        // För JSON-serializing
         public AdminViewModel() { }
 
         public AdminViewModel(AdminModel am)

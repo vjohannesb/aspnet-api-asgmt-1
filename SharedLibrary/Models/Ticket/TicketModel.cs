@@ -40,6 +40,9 @@ namespace SharedLibrary.Models.Ticket
 
         public virtual int? AssignedAdminId { get; set; }
         public virtual AdminModel AssignedAdmin { get; set; }
+
+        [NotMapped]
+        public AdminViewModel AdminViewModel { get; set; }
     }
 
     // Explicit numrering för tydlighets skull

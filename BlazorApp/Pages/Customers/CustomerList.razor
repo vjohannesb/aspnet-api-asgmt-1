@@ -57,15 +57,16 @@ else
         var response = await apiService.SendToAPIAsync(HttpMethod.Get, _customersUrl, auth: true);
         if (response.IsSuccessStatusCode)
             _customers = await response.Content.ReadFromJsonAsync<CustomerModel[]>();
-        else if (response.StatusCode == HttpStatusCode.Unauthorized)
-            navigationManager.NavigateTo("/signin");
         else
         {
             _error = $"Error loading customers. {(int)response.StatusCode} {response.ReasonPhrase}";
             apiService.LogWarningIfDebug(await response.Content.ReadAsStringAsync(), _logger);
         }
 
-        _message = string.Empty;
+        if (_customers.Length < 1)
+            _message = "No customers available.";
+        else
+            _message = string.Empty;
     }
 
     private void AddCustomer()

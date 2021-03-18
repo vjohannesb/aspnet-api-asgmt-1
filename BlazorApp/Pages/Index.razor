@@ -1,16 +1,16 @@
 ﻿@page "/"
-<ValidateToken />
 
 <h1 class="text-center mt-5 justify-">Welcome@(_displayName != null ? " " + _displayName : "")!</h1>
 
 @code {
 
     private string _displayName;
+    private string _validateUrl = "https://localhost:44330/api/admin/validate";
 
     protected override async Task OnInitializedAsync()
     {
         var tokenDisplayName = await apiService.GetDisplayName();
-        if (tokenDisplayName != null)
-            _displayName = tokenDisplayName;
+        if (!string.IsNullOrEmpty(tokenDisplayName))
+            _displayName = tokenDisplayName.Split(" ")[0];
     }
 } 

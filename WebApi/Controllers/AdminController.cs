@@ -6,9 +6,11 @@ using Microsoft.Extensions.Primitives;
 using SharedLibrary.Models.Admin;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Threading.Tasks;
 using WebApi.Data;
+using WebApi.Filters;
 using WebApi.Services;
 
 namespace WebApi.Controllers
@@ -40,11 +42,28 @@ namespace WebApi.Controllers
             var response = await _identity.SignInAsync(model);
 
             if (response.Succeeded)
-                return new OkObjectResult(response);
+                return Ok(response);
 
             return Unauthorized();
         }
 
+        [VerifyToken]
+        [HttpPost("signout")]
+        new public async Task<IActionResult> SignOut()
+        {
+            // Då [Authorize] + [VerifyToken] redan verifierat token bör denna alltid lyckas
+            HttpContext.Request.Headers.TryGetValue("Authorization", out var auth);
+            var token = auth.ToString().Split(" ")[1];
+
+            var result = await _identity.SignOutAsync(token);
+
+            if (result.Succeeded)
+                return Ok(result);
+
+            return Unauthorized();
+        }
+
+        [VerifyToken]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AdminViewModel>>> GetAdmins()
         {
@@ -53,16 +72,20 @@ namespace WebApi.Controllers
             return new OkObjectResult(viewModels);
         }
 
+        [VerifyToken]
         [HttpGet("{id}")]
-        public async Task<ActionResult<IEnumerable<AdminViewModel>>> GetAdmin(Guid id)
+        public async Task<ActionResult<IEnumerable<AdminViewModel>>> GetAdmin(int id)
         {
             var admin = await _context.Administrators.FindAsync(id);
             return new OkObjectResult(new AdminViewModel(admin));
         }
 
-        // Då AdminController kräver auth returnerar denna funktion bara Ok om giltig token finns med i requesten
+        // [Authorize] validerar först token gentemot SecretKey (och expiry),
+        // [VerifyToken] verifierar sedan att det stämmer gentemot databasen
+        // - returnerar bara Ok() om båda är ok
+        [VerifyToken]
         [HttpPost("validate")]
-        public IActionResult ValidateToken()
+        public ActionResult ValidateToken()
             => Ok();
     }
 }

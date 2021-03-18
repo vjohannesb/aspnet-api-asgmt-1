@@ -1,0 +1,182 @@
+﻿@page "/tickets/{id:int}/edit"
+@inject ILogger<EditTicket> _logger
+
+<h3>Edit ticket</h3>
+<p class="text-black-50 font-monospace">@(now ?? "")</p>
+
+@if (!string.IsNullOrEmpty(_location))
+{
+    <div class="alert alert-success">
+        <span>Ticket registered! </span>
+        <NavLink class="d-inline" role="button" @onclick="GoToTicket">Go to ticket</NavLink>
+    </div>
+}
+else if (!string.IsNullOrEmpty(_error))
+{
+    <div class="alert alert-danger">
+        <span>@_error</span>
+    </div>
+}
+
+@if (_administrators == null)
+{
+    <p>@_message</p>
+}
+else
+{
+    <EditForm Model="_ticket" OnValidSubmit="SaveEdit">
+        <DataAnnotationsValidator />
+
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <InputTextArea @bind-Value="@_ticket.Description" class="form-control" rows="3" />
+            <ValidationMessage For="() => _ticket.Description" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Status</label>
+            <InputSelect @bind-Value="@_ticket.Status" class="form-select" aria-label="Select ticket status">
+                <option value="@TicketStatus.Open">Open</option>
+                <option value="@TicketStatus.Active">Active</option>
+                <option value="@TicketStatus.Closed">Closed</option>
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Customer</label>
+            <InputSelect @bind-Value="@_ticket.CustomerId" class="form-select" aria-label="Select a customer">
+                @if (_ticket.CustomerId == null)
+                {
+                    <option value="">Select a customer...</option>
+                }
+                else
+                {
+                    <option value="">None</option>
+                }
+                @if (_customers != null)
+                    {
+                    @foreach (var customer in _customers)
+                        {
+                        <option value="@customer.CustomerId">
+                            @customer.FirstName @customer.LastName
+                        </option>
+                        }
+                    }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Assign an administrator</label>
+            <InputSelect @bind-Value="@_ticket.AssignedAdminId" class="form-select" aria-label="Select an administrator">
+                @if (_ticket.AssignedAdminId == null)
+                {
+                    <option value="">Select an administrator...</option>
+                    }
+                    else
+                    {
+                    <option value="">None</option>
+                    }
+                @if (_administrators != null)
+                    {
+                    @foreach (var admin in _administrators)
+                        {
+                        <option value="@admin.AdminId">
+                            @admin.DisplayName
+                        </option>
+                        }
+                    }
+            </InputSelect>
+        </div>
+
+        <button type="submit" class="btn btn-success" disabled=@submitting>Save</button>
+        <button class="btn btn-secondary ms-2" @onclick="GoToList" disabled=@submitting>Back to List</button>
+    </EditForm>
+
+}
+
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private TicketModel _ticket;
+    private IEnumerable<AdminViewModel> _administrators;
+    private IEnumerable<CustomerModel> _customers;
+
+    private bool submitting = false;
+    private string now;
+    private string _token;
+    private string _location;
+    private string _error;
+    private string _message = "Loading...";
+
+    private string _adminUrl = "https://localhost:44330/api/admin";
+    private string _customersUrl = "https://localhost:44330/api/customers";
+    private string _ticketsUrl = "https://localhost:44330/api/tickets";
+    private string _ticketUrl;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _ticketUrl = $"{_ticketsUrl}/{Id}";
+        now = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+
+        var ticketResponse = await apiService.SendToAPIAsync(HttpMethod.Get, _ticketUrl, auth: true);
+        if (ticketResponse.IsSuccessStatusCode)
+            _ticket = await ticketResponse.Content.ReadFromJsonAsync<TicketModel>();
+        else
+        {
+            _error = $"Could not get ticket. {(int)ticketResponse.StatusCode} {ticketResponse.ReasonPhrase}";
+            _message = string.Empty;
+            apiService.LogWarningIfDebug(await ticketResponse.Content.ReadAsStringAsync(), _logger);
+            return;
+        }
+
+        var adminResponse = await apiService.SendToAPIAsync(HttpMethod.Get, _adminUrl, auth: true);
+        if (adminResponse.IsSuccessStatusCode)
+        {
+            _administrators = await adminResponse.Content.ReadFromJsonAsync<AdminViewModel[]>();
+            var customerResponse = await apiService.SendToAPIAsync(HttpMethod.Get, _customersUrl, auth: true);
+            if (customerResponse.IsSuccessStatusCode)
+                _customers = await customerResponse.Content.ReadFromJsonAsync<CustomerModel[]>();
+        }
+        else if (adminResponse.StatusCode == HttpStatusCode.Unauthorized)
+            navigationManager.NavigateTo("/signin");
+        else
+        {
+            _error = $"Could not connect to API. {(int)adminResponse.StatusCode} {adminResponse.ReasonPhrase}";
+            _message = string.Empty;
+            apiService.LogWarningIfDebug(await adminResponse.Content.ReadAsStringAsync(), _logger);
+        }
+    }
+
+    private async Task SaveEdit()
+    {
+        _location = string.Empty;
+        _error = string.Empty;
+        _message = string.Empty;
+        submitting = true;
+
+        var response = await apiService.SendToAPIAsync(HttpMethod.Put, _ticketUrl, _ticket, true);
+        if (response.IsSuccessStatusCode)
+        {
+            _ticket = new TicketModel();
+
+            // POST Ticket returnerar ticket-id i Result-fältet
+            var payload = await response.Content.ReadFromJsonAsync<ResponseModel>();
+            _location = $"/tickets/{payload.Result}";
+        }
+        else
+        {
+            _error = $"Could not update ticket. {(int)response.StatusCode} {response.ReasonPhrase}";
+            apiService.LogWarningIfDebug(await response.Content.ReadAsStringAsync(), _logger);
+        }
+
+        submitting = false;
+    }
+
+    private void GoToTicket()
+        => navigationManager.NavigateTo(_location);
+
+    private void GoToList()
+        => navigationManager.NavigateTo("/tickets");
+}

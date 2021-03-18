@@ -7,33 +7,66 @@
 
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
     <ul class="nav flex-column">
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
-            </NavLink>
-        </li>
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="tickets/add">
-                <span class="oi oi-plus" aria-hidden="true"></span> Register Ticket
-            </NavLink>
-        </li>
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="tickets" Match="NavLinkMatch.All">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Tickets
-            </NavLink>
-        </li>
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="customers">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Customers
-            </NavLink>
-        </li>
+        @if (_validToken)
+        {
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <span class="oi oi-home" aria-hidden="true"></span> Home
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="tickets/add">
+                    <span class="oi oi-plus" aria-hidden="true"></span> Add Ticket
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="tickets" Match="NavLinkMatch.All">
+                    <span class="oi oi-list-rich" aria-hidden="true"></span> Tickets
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="customers">
+                    <span class="oi oi-list-rich" aria-hidden="true"></span> Customers
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="signout">
+                    <span class="oi oi-account-logout" aria-hidden="true"></span> Sign out
+                </NavLink>
+            </li>
+        }
+        else
+        {
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="signin">
+                    <span class="oi oi-account-login" aria-hidden="true"></span> Sign in
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="register">
+                    <span class="oi oi-plus" aria-hidden="true"></span> Register
+                </NavLink>
+            </li>
+        }
     </ul>
 </div>
 
 @code {
     private bool collapseNavMenu = true;
+    private bool _validToken;
+    private string _validateUrl = "https://localhost:44330/api/admin/validate";
 
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await apiService.SendToAPIAsync(HttpMethod.Post, _validateUrl, auth: true);
+        _validToken = response.IsSuccessStatusCode;
+        if (!_validToken && !navigationManager.Uri.Contains("signin"))
+            navigationManager.NavigateTo("/signin", forceLoad: true);
+
+        StateHasChanged();
+    }
 
     private void ToggleNavMenu()
     {

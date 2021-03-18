@@ -10,5 +10,9 @@ namespace WebApi.Services
         public Task<IActionResult> CreateAdminAsync(RegisterModel model);
 
         public Task<ResponseModel> SignInAsync(SignInModel model);
+
+        public Task<ResponseModel> SignOutAsync(string token);
+
+        public int GetUserIdFromToken(string token);
     }
 }

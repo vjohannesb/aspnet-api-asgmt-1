@@ -5,4 +5,10 @@
         if (!response.IsSuccessStatusCode)
             navigationManager.NavigateTo("/signin");
     }
+
+    public static async Task DoNothing()
+    {
+        await Task.Delay(1000);
+        Console.WriteLine("Did nothing!");
+    }
 }

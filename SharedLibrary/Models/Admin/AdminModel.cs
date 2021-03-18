@@ -26,6 +26,9 @@ namespace SharedLibrary.Models.Admin
         [Required]
         public int AdminId { get; set; }
 
+        [Column(TypeName = "varbinary(max)")]
+        public byte[] Token { get; set; }
+
         [Required]
         [JsonIgnore]
         [Column(TypeName = "varbinary(max)")]
@@ -46,10 +49,28 @@ namespace SharedLibrary.Models.Admin
         public bool ValidatePasswordHash(string password)
         {
             var saltedHash = GenerateSaltedHash(Encoding.UTF8.GetBytes(password));
+            if (saltedHash.Length != AdminHash.Length)
+                return false;
 
             for (var i = 0; i < saltedHash.Length; i++)
                 if (saltedHash[i] != AdminHash[i])
                     return false; 
+
+            return true;
+        }
+
+        public void CreateTokenWithHash(string token)
+            => Token = GenerateSaltedHash(Encoding.UTF8.GetBytes(token));
+
+        public bool ValidateTokenHash(string token)
+        {
+            var saltedToken = GenerateSaltedHash(Encoding.UTF8.GetBytes(token));
+            if (saltedToken.Length != Token.Length)
+                return false;
+
+            for (var i = 0; i < saltedToken.Length; i++)
+                if (saltedToken[i] != Token[i])
+                    return false;
 
             return true;
         }

@@ -11,10 +11,12 @@ using SharedLibrary.Models;
 using SharedLibrary.Models.Admin;
 using SharedLibrary.Models.Ticket;
 using WebApi.Data;
+using WebApi.Filters;
 
 namespace WebApi.Controllers
 {
     [Authorize]
+    [VerifyToken]
     [ApiController]
     [Route("api/[controller]")]
     public class TicketsController : ControllerBase
@@ -29,30 +31,60 @@ namespace WebApi.Controllers
         }
 
         // GET: api/Tickets
-        // sort/order hämtas från querystring automatiskt
+        // sort/order hämtas från querystring
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TicketModel>>> GetTickets(string sort = null, string order = null)
         {
-            var tickets = await _context.Tickets.ToListAsync();
+            var tickets = await _context.Tickets.Include(t => t.Customer).ToListAsync();
+            foreach (var ticket in tickets)
+            {
+                if (ticket.AssignedAdminId != null)
+                    ticket.AdminViewModel = new AdminViewModel(
+                        await _context.Administrators
+                            .FirstOrDefaultAsync(t => 
+                                t.AdminId == ticket.AssignedAdminId));
+            }
+
             if (string.IsNullOrEmpty(sort))
                 return Ok(tickets);
 
             _logger.LogInformation($"Sort: {sort} -/- Order: {order}");
 
-            order ??= "asc";
-
             switch (sort)
             {
                 case "id":
-                    tickets = tickets.OrderBy(t => t.TicketId.ToString()).ToList();
+                    if (order == "desc")
+                        tickets = tickets.OrderByDescending(t => t.TicketId).ToList();
+                    else
+                        tickets = tickets.OrderBy(t => t.TicketId).ToList();
                     break;
                 case "status":
-                    tickets = tickets.OrderBy(t => t.Status).ToList();
+                    if (order == "desc")
+                        tickets = tickets.OrderByDescending(t => t.Status).ToList();
+                    else
+                        tickets = tickets.OrderBy(t => t.Status).ToList();
+                    break;
+                case "created":
+                    if (order == "desc")
+                        tickets = tickets.OrderByDescending(t => t.DateCreated).ToList();
+                    else
+                        tickets = tickets.OrderBy(t => t.DateCreated).ToList();
+                    break;
+                case "updated":
+                    if (order == "desc")
+                        tickets = tickets.OrderByDescending(t => t.DateUpdated).ToList();
+                    else
+                        tickets = tickets.OrderBy(t => t.DateUpdated).ToList();
+                    break;
+                case "customer":
+                    if (order == "desc")
+                        tickets = tickets.OrderByDescending(t => t.Customer?.FirstName).ToList();
+                    else
+                        tickets = tickets.OrderBy(t => t.Customer?.FirstName).ToList();
                     break;
                 default:
                     break;
             }
-
             return new OkObjectResult(tickets);
         }
 
@@ -60,7 +92,16 @@ namespace WebApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<TicketModel>> GetTicket(int id)
         {
-            var ticket = await _context.Tickets.FindAsync(id);
+            var ticket = await _context.Tickets.Include(t => t.Customer).FirstOrDefaultAsync(t => t.TicketId == id);
+
+            if (ticket?.AssignedAdminId != null)
+            {
+                var _admin = await _context.Administrators.FindAsync(ticket.AssignedAdminId);
+                if (_admin != null)
+                    ticket.AdminViewModel = new AdminViewModel(_admin);
+                ticket.AssignedAdmin = null;
+            }
+
             return ticket == null 
                 ? NotFound() 
                 : Ok(ticket);
@@ -89,7 +130,7 @@ namespace WebApi.Controllers
                     throw;
             }
 
-            return NoContent();
+            return Ok(new ResponseModel(true, id.ToString()));
         }
 
         // POST: api/Tickets

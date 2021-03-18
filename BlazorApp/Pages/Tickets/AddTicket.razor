@@ -52,7 +52,7 @@ else
                 @foreach (var customer in _customers)
                     {
                     <option value="@customer.CustomerId">
-                        @customer.FirstName @customer.LastName
+                        @customer.DisplayName
                     </option>
                     }
                 }

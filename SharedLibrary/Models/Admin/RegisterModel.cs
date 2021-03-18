@@ -17,7 +17,7 @@ namespace SharedLibrary.Models.Admin
 
         [Required(ErrorMessage = "Please confirm your password.")]
         [DataType(DataType.Password)]
-        [CompareProperty(nameof(Password))]
+        [CompareProperty(nameof(Password), ErrorMessage = "Passwords do not match.")]
         public string ConfirmPassword { get; set; }
     }
 }

@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using WebApi.Data;
 using WebApi.Services;
 using Newtonsoft.Json;
+using WebApi.Controllers;
 
 namespace WebApi
 {
@@ -55,9 +56,9 @@ namespace WebApi
                 {
                     OnTokenValidated = context =>
                     {
-                        var parsed = int.TryParse(context.Principal.FindFirst("UserId").Value, out var id);
+                        var parsed = int.TryParse(context.Principal?.FindFirst("UserId")?.Value, out var id);
                         if (!parsed || id < 1)
-                            context.Fail("Unauthorized.");
+                            context.Fail("401 Unauthorized");
                         return Task.CompletedTask;
                     }
                 };

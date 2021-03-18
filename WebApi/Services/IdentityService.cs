@@ -22,10 +22,13 @@ namespace WebApi.Services
 
         private readonly IConfiguration _configuration;
 
+        private readonly JwtSecurityTokenHandler _tokenHandler;
+
         public IdentityService(SqlDbContext context, IConfiguration configuration)
         {
             _context = context;
             _configuration = configuration;
+            _tokenHandler = new JwtSecurityTokenHandler();
         }
 
         public async Task<IActionResult> CreateAdminAsync(RegisterModel model)
@@ -79,7 +82,6 @@ namespace WebApi.Services
             if (!admin.ValidatePasswordHash(model.Password))
                 return new ResponseModel(false, null);
 
-            var tokenHandler = new JwtSecurityTokenHandler();
             var _secretKey = Encoding.UTF8.GetBytes(_configuration.GetValue<string>("SecretKey"));
 
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -94,18 +96,40 @@ namespace WebApi.Services
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(_secretKey), SecurityAlgorithms.HmacSha512Signature)
             };
 
-            var _accessToken = tokenHandler.WriteToken(tokenHandler.CreateToken(tokenDescriptor));
+            var _accessToken = _tokenHandler.WriteToken(_tokenHandler.CreateToken(tokenDescriptor));
+            admin.CreateTokenWithHash(_accessToken);
+
+            try
+            {
+                _context.Update(admin);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unhandled error. {ex.Message}\n{ex}");
+            }
 
             return new ResponseModel(true, _accessToken);
         }
 
-        // *** FIXA ***
-        // *** FIXA ***
-        // *** FIXA ***
-        // *** FIXA ***
-        public async Task<ActionResult> SignOutAsync(int id)
+        public async Task<ResponseModel> SignOutAsync(string token)
         {
-            return new OkResult();
+            var id = GetUserIdFromToken(token);
+            var admin = await _context.Administrators.FindAsync(id);
+            if (admin == null)
+                return new ResponseModel(false, null);
+
+            admin.Token = null;
+            try
+            {
+                _context.Update(admin);
+                await _context.SaveChangesAsync();
+                return new ResponseModel(true, id.ToString());
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel(false, ex.ToString());
+            }
         }
 
         private bool EmailRegistered(string email)
@@ -113,5 +137,14 @@ namespace WebApi.Services
 
         private bool AdminExists(int id)
             => _context.Administrators.Any(a => a.AdminId == id);
+
+        public int GetUserIdFromToken(string token)
+        {
+            var jwtToken = _tokenHandler.ReadJwtToken(token);
+            var tokenId = jwtToken.Claims.FirstOrDefault(claim => claim.Type == "UserId")?.Value;
+            var parsed = int.TryParse(tokenId, out int id);
+
+            return parsed ? id : 0;
+        }
     }
 }

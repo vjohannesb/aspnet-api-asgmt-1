@@ -14,5 +14,8 @@ namespace SharedLibrary.Models.Customer
         [Key]
         [Required]
         public int CustomerId { get; set; }
+
+        [NotMapped]
+        public string DisplayName => $"{FirstName} {LastName}";
     }
 }

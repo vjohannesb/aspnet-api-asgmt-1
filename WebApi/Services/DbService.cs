@@ -91,6 +91,11 @@ namespace WebApi.Services
             model.DateCreated = DateTime.Now;
             model.DateUpdated = DateTime.Now;
 
+            if (model.CustomerId != null)
+                model.Customer = await GetCustomerAsync(model.CustomerId.ToString());
+            if (model.AssignedAdminId != null)
+                model.AssignedAdmin = await _context.Administrators.FindAsync(model.AssignedAdminId);
+
             _context.Tickets.Add(model);
 
             try

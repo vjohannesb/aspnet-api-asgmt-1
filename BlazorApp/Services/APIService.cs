@@ -25,6 +25,7 @@ namespace BlazorApp.Services
         private readonly ILocalStorageService _localStorage;
         private readonly HttpClient _httpClient;
         private string _token;
+        private string _signInUrl = "https://localhost:44330/api/admin/signin";
 
         public APIService(HttpClient httpClient, ILocalStorageService localStorage)
         {
@@ -47,9 +48,13 @@ namespace BlazorApp.Services
         public async Task<string> GetDisplayName()
         {
             _token = await GetTokenAsync();
-            var handler = new JwtSecurityTokenHandler();
-            var jsonToken = handler.ReadJwtToken(_token);
-            return jsonToken.Claims.FirstOrDefault(claim => claim.Type == "DisplayName")?.Value;
+            if (!string.IsNullOrEmpty(_token))
+            {
+                var handler = new JwtSecurityTokenHandler();
+                var jsonToken = handler.ReadJwtToken(_token);
+                return jsonToken.Claims.FirstOrDefault(claim => claim.Type == "DisplayName")?.Value;
+            }
+            return null;
         }
 
         /* "Allomfattande" funktion för att skicka requests till API.
@@ -104,6 +109,25 @@ namespace BlazorApp.Services
                     Content = new StringContent("Unhandled exception. " + ex.Message) 
                 };
             }
+        }
+
+        // Helper för att logga in
+        public async Task<HttpResponseMessage> SignIn(SignInModel model)
+        {
+            var response = await SendToAPIAsync(HttpMethod.Post, _signInUrl, model);
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ResponseModel>();
+                await SaveTokenAsync(result.Result);
+            }
+            return response;
+        }
+
+        // Helper för att logga ut
+        public async Task SignOut()
+        {
+            _token = null;
+            await _localStorage.RemoveItemAsync("accessToken");
         }
 
         // Helper för "snyggare" villkorad varnings-loggning. Tar in ILogger<T> från anrop

@@ -5,4 +5,27 @@
     text-align: start;
     max-width: 500px;
     width: max-content;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.table-date {
+    max-width: 100px;
+}
+
+.cut-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+tr {
+    cursor: pointer;
+}
+
+td {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }

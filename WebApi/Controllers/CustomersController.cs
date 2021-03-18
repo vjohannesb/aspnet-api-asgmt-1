@@ -9,10 +9,12 @@ using Microsoft.EntityFrameworkCore;
 using SharedLibrary.Models;
 using SharedLibrary.Models.Customer;
 using WebApi.Data;
+using WebApi.Filters;
 
 namespace WebApi.Controllers
 {
     [Authorize]
+    [VerifyToken]
     [Route("api/[controller]")]
     [ApiController]
     public class CustomersController : ControllerBase
