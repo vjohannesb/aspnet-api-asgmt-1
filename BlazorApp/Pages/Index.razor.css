@@ -1,0 +1,56 @@
+﻿.text-teal {
+    color: var(--bs-teal);
+}
+
+h1,
+h2 {
+    font-weight: bolder;
+    text-align: center;
+}
+
+.box {
+    border-radius: 5px;
+    opacity: 0.85;
+    transition: 0.25s;
+}
+
+hr {
+    opacity: 0.75 !important;
+    border-radius: 5px !important;
+    height: 5px !important;
+    width: 50% !important;
+    margin: 0 auto !important;
+    transition: 0.25s;
+    animation: hr-anim 1s cubic-bezier(0.65, 0, 0.35, 1);
+    animation-iteration-count: 1;
+}
+
+.box-open hr {
+    color: var(--bs-warning);
+}
+
+.box-active hr {
+    color: var(--bs-info);
+}
+
+.box-closed hr {
+    color: var(--bs-teal);
+}
+
+.box:hover {
+    opacity: 1;
+}
+
+@keyframes hr-anim {
+    0% {
+        transform: scale(0);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}

@@ -2,6 +2,7 @@
 @inject ILogger<DeleteTicket> _logger
 
 <h3>Delete Ticket</h3>
+<TimeDisplay />
 
 @if (!string.IsNullOrEmpty(_error))
 {
@@ -20,7 +21,7 @@
         <button class="btn btn-danger" @onclick="Delete">Delete</button>
         <button class="btn btn-secondary" @onclick="GoToList">Back to List</button>
     </div>
-} 
+}
 
 @code {
     [Parameter]
@@ -29,7 +30,7 @@
 
     private string _ticketUrl = "https://localhost:44330/api/tickets";
 
-    private TicketModel _ticket;
+    private TicketViewModel _ticket;
     private string _token;
     private string _error;
     private string _message = "Loading...";
@@ -40,7 +41,7 @@
         var response = await apiService.SendToAPIAsync(HttpMethod.Get, _ticketUrl, auth: true);
         if (response.IsSuccessStatusCode)
         {
-            _ticket = await response.Content.ReadFromJsonAsync<TicketModel>();
+            _ticket = await response.Content.ReadFromJsonAsync<TicketViewModel>();
             _message = string.Empty;
         }
         else

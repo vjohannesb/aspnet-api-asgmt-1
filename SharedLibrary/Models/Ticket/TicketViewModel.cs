@@ -1,12 +1,45 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using SharedLibrary.Models.Admin;
+using SharedLibrary.Models.Customer;
+using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace SharedLibrary.Models.Ticket
 {
-    class TicketViewModel
+    public class TicketViewModel
     {
+        public TicketViewModel() { }
+
+        public TicketViewModel(TicketModel tm)
+        {
+            TicketId = tm.TicketId;
+            Description = tm.Description;
+            DateCreated = tm.DateCreated;
+            DateUpdated = tm.DateUpdated;
+            Status = tm.Status;
+            CustomerId = tm.CustomerId;
+            Customer = tm.Customer != null ? new CustomerViewModel(tm.Customer) : null;
+            AdminId = tm.AssignedAdminId;
+            Administrator = tm.AssignedAdmin != null ? new AdminViewModel(tm.AssignedAdmin) : null;
+        }
+
+        public int TicketId { get; set; }
+
+        [Required]
+        public string Description { get; set; }
+
+        [Required]
+        public DateTime DateCreated { get; set; }
+
+        [Required]
+        public DateTime DateUpdated { get; set; }
+
+        [Required]
+        public TicketStatus Status { get; set; }
+
+        public int? CustomerId { get; set; }
+        public CustomerViewModel Customer { get; set; }
+
+        public int? AdminId { get; set; }
+        public AdminViewModel Administrator { get; set; }
     }
 }

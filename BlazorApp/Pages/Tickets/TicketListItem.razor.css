@@ -1,31 +1,39 @@
-﻿.table-description {
-    word-break: break-word;
-    word-break: break-all;
-    hyphens: auto;
-    text-align: start;
-    max-width: 500px;
-    width: max-content;
-    overflow: hidden;
-    white-space: nowrap;
-}
-
-.table-date {
-    max-width: 100px;
-}
-
-.cut-text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-tr {
+﻿td {
     cursor: pointer;
-}
-
-td {
     max-width: 100px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    text-align: center;
+}
+
+.ticket-description {
+    max-width: 250px;
+    text-align: start !important;
+}
+
+.ticket-date {
+    max-width: 50px;
+    overflow: visible !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+}
+
+.ticket-status,
+.ticket-id {
+    width: 10px !important;
+}
+
+td.actions a {
+    transition: color 0.2s;
+    color: gray;
+    text-decoration: none;
+}
+
+td.actions a:hover {
+    color: black;
+}
+
+.updating tbody tr td {
+    cursor: wait !important;
 }

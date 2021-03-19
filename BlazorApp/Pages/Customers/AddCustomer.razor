@@ -4,25 +4,12 @@
 
 
 <h3>Register new customer</h3>
-<p class="text-black-50 font-monospace">@(now ?? "")</p>
-
-@if (!string.IsNullOrEmpty(_location))
-{
-    <div class="alert alert-success">
-        <span>Customer registered! </span>
-        <NavLink class="d-inline" role="button" @onclick="GoToCustomer">Go to customer</NavLink>
-    </div>
-}
-else if (!string.IsNullOrEmpty(_error))
-{
-    <div class="alert alert-danger">
-        <span>@_error</span>
-    </div>
-}
+<TimeDisplay />
+<MessageBox Message="@_message" Error="@_error" LinkAction="GoToCustomer" MethodMessage="Go to customer" />
 
 @if (_customer == null)
 {
-    <p>@_message</p>
+    <p>Loading...</p>
 }
 else
 {
@@ -56,7 +43,7 @@ else
     private string now;
     private string _error;
     private string _location;
-    private string _message = "Loading...";
+    private string _message;
     private bool submitting = false;
 
     private CustomerModel _customer;
@@ -83,6 +70,7 @@ else
             _customer = new CustomerModel();
             var payload = await response.Content.ReadFromJsonAsync<ResponseModel>();
             _location = $"/customers/{payload.Result}";
+            _message = "Customer created! ";
         }
         else
         {

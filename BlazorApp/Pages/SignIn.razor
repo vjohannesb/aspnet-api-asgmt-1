@@ -1,6 +1,8 @@
 ﻿@page "/signin"
 
 <h3>Sign in</h3>
+<TimeDisplay />
+
 @if (!string.IsNullOrEmpty(_error))
 {
     <div class="alert alert-danger">

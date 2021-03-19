@@ -33,84 +33,78 @@ namespace WebApi.Controllers
         // GET: api/Tickets
         // sort/order hämtas från querystring
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TicketModel>>> GetTickets(string sort = null, string order = null)
+        public async Task<ActionResult<IEnumerable<TicketViewModel>>> GetTickets(string sort = null, string order = null)
         {
-            var tickets = await _context.Tickets.Include(t => t.Customer).ToListAsync();
-            foreach (var ticket in tickets)
-            {
-                if (ticket.AssignedAdminId != null)
-                    ticket.AdminViewModel = new AdminViewModel(
-                        await _context.Administrators
-                            .FirstOrDefaultAsync(t => 
-                                t.AdminId == ticket.AssignedAdminId));
-            }
+            var tickets = await _context.Tickets
+                .Include(t => t.Customer)
+                .Include(t => t.AssignedAdmin)
+                .ToListAsync();
+            var ticketViewModels = tickets.Select(t => new TicketViewModel(t));
 
             if (string.IsNullOrEmpty(sort))
-                return Ok(tickets);
-
-            _logger.LogInformation($"Sort: {sort} -/- Order: {order}");
+                return Ok(ticketViewModels);
 
             switch (sort)
             {
                 case "id":
                     if (order == "desc")
-                        tickets = tickets.OrderByDescending(t => t.TicketId).ToList();
+                        ticketViewModels = ticketViewModels.OrderByDescending(t => t.TicketId).ToList();
                     else
-                        tickets = tickets.OrderBy(t => t.TicketId).ToList();
+                        ticketViewModels = ticketViewModels.OrderBy(t => t.TicketId).ToList();
                     break;
                 case "status":
                     if (order == "desc")
-                        tickets = tickets.OrderByDescending(t => t.Status).ToList();
+                        ticketViewModels = ticketViewModels.OrderByDescending(t => t.Status).ToList();
                     else
-                        tickets = tickets.OrderBy(t => t.Status).ToList();
+                        ticketViewModels = ticketViewModels.OrderBy(t => t.Status).ToList();
                     break;
                 case "created":
                     if (order == "desc")
-                        tickets = tickets.OrderByDescending(t => t.DateCreated).ToList();
+                        ticketViewModels = ticketViewModels.OrderByDescending(t => t.DateCreated).ToList();
                     else
-                        tickets = tickets.OrderBy(t => t.DateCreated).ToList();
+                        ticketViewModels = ticketViewModels.OrderBy(t => t.DateCreated).ToList();
                     break;
                 case "updated":
                     if (order == "desc")
-                        tickets = tickets.OrderByDescending(t => t.DateUpdated).ToList();
+                        ticketViewModels = ticketViewModels.OrderByDescending(t => t.DateUpdated).ToList();
                     else
-                        tickets = tickets.OrderBy(t => t.DateUpdated).ToList();
+                        ticketViewModels = ticketViewModels.OrderBy(t => t.DateUpdated).ToList();
                     break;
+                // Specialare då Customer kan vara tomt,
+                // detta ser till så nullvärden alltid hamnar längst ner
                 case "customer":
                     if (order == "desc")
-                        tickets = tickets.OrderByDescending(t => t.Customer?.FirstName).ToList();
+                        ticketViewModels = ticketViewModels.OrderBy(t => t.Customer == null)
+                            .ThenByDescending(t => t.Customer?.FirstName).ToList();
                     else
-                        tickets = tickets.OrderBy(t => t.Customer?.FirstName).ToList();
+                        ticketViewModels = ticketViewModels.OrderBy(t => t.Customer == null)
+                            .ThenBy(t => t.Customer?.FirstName).ToList();
                     break;
                 default:
                     break;
             }
-            return new OkObjectResult(tickets);
+            return new OkObjectResult(ticketViewModels);
         }
 
         // GET: api/Tickets/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<TicketModel>> GetTicket(int id)
+        public async Task<ActionResult<TicketViewModel>> GetTicket(int id)
         {
-            var ticket = await _context.Tickets.Include(t => t.Customer).FirstOrDefaultAsync(t => t.TicketId == id);
-
-            if (ticket?.AssignedAdminId != null)
-            {
-                var _admin = await _context.Administrators.FindAsync(ticket.AssignedAdminId);
-                if (_admin != null)
-                    ticket.AdminViewModel = new AdminViewModel(_admin);
-                ticket.AssignedAdmin = null;
-            }
+            var ticket = await _context.Tickets
+                .Include(t => t.Customer)
+                .Include(t => t.AssignedAdmin)
+                .FirstOrDefaultAsync(t => t.TicketId == id);
 
             return ticket == null 
                 ? NotFound() 
-                : Ok(ticket);
+                : Ok(new TicketViewModel(ticket));
         }
 
         // PUT: api/Tickets/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTicket(int id, TicketModel ticket)
+        public async Task<IActionResult> PutTicket(int id, TicketViewModel model)
         {
+            var ticket = new TicketModel(model);
             ticket.DateUpdated = DateTime.UtcNow;
 
             if (id != ticket.TicketId)
@@ -135,10 +129,13 @@ namespace WebApi.Controllers
 
         // POST: api/Tickets
         [HttpPost]
-        public async Task<ActionResult<TicketModel>> PostTicket(TicketModel ticket)
+        public async Task<ActionResult<TicketModel>> PostTicket(TicketViewModel model)
         {
+            var ticket = new TicketModel(model);
+            // UTC för generell användning
             ticket.DateCreated = DateTime.UtcNow;
             ticket.DateUpdated = DateTime.UtcNow;
+
             _context.Tickets.Add(ticket);
 
             try

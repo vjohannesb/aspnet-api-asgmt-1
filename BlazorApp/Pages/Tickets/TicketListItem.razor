@@ -1,20 +1,22 @@
 ﻿@inherits ComponentBase
 
 <tr @onclick="() => GoToDetails(Ticket.TicketId)">
-    <td class="text-center text-muted">@Ticket.TicketId.ToString()</td>
-    <td class="table-description" title="@Ticket.Description">
+    <td class="text-muted">@Ticket.TicketId.ToString()</td>
+    <td class="ticket-description" title="@Ticket.Description">
         @Ticket.Description
     </td>
-    <td class="text-center">@Ticket.Status.ToString()</td>
-    <td class="text-center">@Ticket.DateCreated.ToString("yyyy-MM-dd HH:mm")</td>
-    <td class="text-center">@Ticket.DateUpdated.ToString("yyyy-MM-dd HH:mm")</td>
-    <td class="text-center">@Ticket.Customer?.DisplayName</td>
-    <td class="text-center">
-        <a class="text-reset" role="button" href="tickets/@Ticket.TicketId/edit">
-            <i class="far fa-edit me-2"></i>
+    <td>@Ticket.Status.ToString()</td>
+    <td class="ticket-date">@Ticket.DateCreated.ToString("yyyy-MM-dd HH:mm")</td>
+    <td class="ticket-date">@Ticket.DateUpdated.ToString("yyyy-MM-dd HH:mm")</td>
+    <td title="@Ticket.Customer?.DisplayName">
+        @Ticket.Customer?.DisplayName
+    </td>
+    <td class="actions">
+        <a role="button" href="tickets/@Ticket.TicketId/edit">
+            <span class="oi oi-pencil"></span>
         </a>
-        <a class="text-reset" role="button" href="tickets/@Ticket.TicketId/delete">
-            <i class="far fa-trash-alt"></i>
+        <a role="button" href="tickets/@Ticket.TicketId/delete">
+            <span class="oi oi-trash"></span>
         </a>
     </td>
 </tr>

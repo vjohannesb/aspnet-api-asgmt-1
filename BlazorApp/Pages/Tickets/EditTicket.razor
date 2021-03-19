@@ -2,7 +2,7 @@
 @inject ILogger<EditTicket> _logger
 
 <h3>Edit ticket</h3>
-<p class="text-black-50 font-monospace">@(now ?? "")</p>
+<TimeDisplay />
 
 @if (!string.IsNullOrEmpty(_location))
 {
@@ -46,13 +46,13 @@ else
             <label class="form-label">Customer</label>
             <InputSelect @bind-Value="@_ticket.CustomerId" class="form-select" aria-label="Select a customer">
                 @if (_ticket.CustomerId == null)
-                {
+                    {
                     <option value="">Select a customer...</option>
-                }
-                else
-                {
+                    }
+                    else
+                    {
                     <option value="">None</option>
-                }
+                    }
                 @if (_customers != null)
                     {
                     @foreach (var customer in _customers)
@@ -67,9 +67,9 @@ else
 
         <div class="mb-3">
             <label class="form-label">Assign an administrator</label>
-            <InputSelect @bind-Value="@_ticket.AssignedAdminId" class="form-select" aria-label="Select an administrator">
-                @if (_ticket.AssignedAdminId == null)
-                {
+            <InputSelect @bind-Value="@_ticket.AdminId" class="form-select" aria-label="Select an administrator">
+                @if (_ticket.AdminId == null)
+                    {
                     <option value="">Select an administrator...</option>
                     }
                     else
@@ -89,6 +89,7 @@ else
         </div>
 
         <button type="submit" class="btn btn-success" disabled=@submitting>Save</button>
+        <button class="btn btn-outline-success ms-2" @onclick="QuickSave" disabled=@submitting>Quick Save</button>
         <button class="btn btn-secondary ms-2" @onclick="GoToList" disabled=@submitting>Back to List</button>
     </EditForm>
 
@@ -99,9 +100,9 @@ else
     [Parameter]
     public int Id { get; set; }
 
-    private TicketModel _ticket;
+    private TicketViewModel _ticket;
     private IEnumerable<AdminViewModel> _administrators;
-    private IEnumerable<CustomerModel> _customers;
+    private IEnumerable<CustomerViewModel> _customers;
 
     private bool submitting = false;
     private string now;
@@ -122,7 +123,7 @@ else
 
         var ticketResponse = await apiService.SendToAPIAsync(HttpMethod.Get, _ticketUrl, auth: true);
         if (ticketResponse.IsSuccessStatusCode)
-            _ticket = await ticketResponse.Content.ReadFromJsonAsync<TicketModel>();
+            _ticket = await ticketResponse.Content.ReadFromJsonAsync<TicketViewModel>();
         else
         {
             _error = $"Could not get ticket. {(int)ticketResponse.StatusCode} {ticketResponse.ReasonPhrase}";
@@ -137,7 +138,7 @@ else
             _administrators = await adminResponse.Content.ReadFromJsonAsync<AdminViewModel[]>();
             var customerResponse = await apiService.SendToAPIAsync(HttpMethod.Get, _customersUrl, auth: true);
             if (customerResponse.IsSuccessStatusCode)
-                _customers = await customerResponse.Content.ReadFromJsonAsync<CustomerModel[]>();
+                _customers = await customerResponse.Content.ReadFromJsonAsync<CustomerViewModel[]>();
         }
         else if (adminResponse.StatusCode == HttpStatusCode.Unauthorized)
             navigationManager.NavigateTo("/signin");
@@ -159,8 +160,6 @@ else
         var response = await apiService.SendToAPIAsync(HttpMethod.Put, _ticketUrl, _ticket, true);
         if (response.IsSuccessStatusCode)
         {
-            _ticket = new TicketModel();
-
             // POST Ticket returnerar ticket-id i Result-fältet
             var payload = await response.Content.ReadFromJsonAsync<ResponseModel>();
             _location = $"/tickets/{payload.Result}";
@@ -172,6 +171,13 @@ else
         }
 
         submitting = false;
+    }
+
+    private async Task QuickSave()
+    {
+        await SaveEdit();
+        if (string.IsNullOrEmpty(_error))
+            GoToList();
     }
 
     private void GoToTicket()

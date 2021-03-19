@@ -35,16 +35,15 @@ namespace WebApi.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
             => await _identity.CreateAdminAsync(model);
 
+        // FIXA TILL IACTIONRESULT PÅ SIGNINASYNC??
         [AllowAnonymous]
         [HttpPost("signin")]
         public async Task<IActionResult> SignIn([FromBody] SignInModel model)
         {
             var response = await _identity.SignInAsync(model);
-
-            if (response.Succeeded)
-                return Ok(response);
-
-            return Unauthorized();
+            return response.Succeeded
+                ? Ok(response)
+                : Unauthorized();
         }
 
         [VerifyToken]
@@ -56,11 +55,9 @@ namespace WebApi.Controllers
             var token = auth.ToString().Split(" ")[1];
 
             var result = await _identity.SignOutAsync(token);
-
-            if (result.Succeeded)
-                return Ok(result);
-
-            return Unauthorized();
+            return result.Succeeded
+                ? Ok(result)
+                : Unauthorized();
         }
 
         [VerifyToken]
@@ -77,12 +74,14 @@ namespace WebApi.Controllers
         public async Task<ActionResult<IEnumerable<AdminViewModel>>> GetAdmin(int id)
         {
             var admin = await _context.Administrators.FindAsync(id);
-            return new OkObjectResult(new AdminViewModel(admin));
+            return admin == null
+                ? NotFound()
+                : Ok(new AdminViewModel(admin));
         }
 
         // [Authorize] validerar först token gentemot SecretKey (och expiry),
         // [VerifyToken] verifierar sedan att det stämmer gentemot databasen
-        // - returnerar bara Ok() om båda är ok
+        // - returnerar alltså bara Ok() om båda är ok
         [VerifyToken]
         [HttpPost("validate")]
         public ActionResult ValidateToken()

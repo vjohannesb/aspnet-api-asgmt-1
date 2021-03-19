@@ -1,5 +1,5 @@
 ﻿<div class="top-row pl-4 navbar navbar-dark">
-    <a class="text-center" href="">Ticket MGMT</a>
+    <a class="text-center navbar-brand m-auto" href="">Ticket MGMT</a>
     <button class="navbar-toggler" @onclick="ToggleNavMenu">
         <span class="navbar-toggler-icon"></span>
     </button>
@@ -15,18 +15,18 @@
                 </NavLink>
             </li>
             <li class="nav-item px-3">
-                <NavLink class="nav-link" href="tickets/add">
+                <NavLink class="nav-link" href="addticket">
                     <span class="oi oi-plus" aria-hidden="true"></span> Add Ticket
                 </NavLink>
             </li>
             <li class="nav-item px-3">
-                <NavLink class="nav-link" href="tickets" Match="NavLinkMatch.All">
+                <NavLink class="nav-link" href="tickets">
                     <span class="oi oi-list-rich" aria-hidden="true"></span> Tickets
                 </NavLink>
             </li>
             <li class="nav-item px-3">
                 <NavLink class="nav-link" href="customers">
-                    <span class="oi oi-list-rich" aria-hidden="true"></span> Customers
+                    <span class="oi oi-box" aria-hidden="true"></span> Customers
                 </NavLink>
             </li>
             <li class="nav-item px-3">
@@ -52,24 +52,24 @@
 </div>
 
 @code {
-    private bool collapseNavMenu = true;
-    private bool _validToken;
-    private string _validateUrl = "https://localhost:44330/api/admin/validate";
+private bool collapseNavMenu = true;
+private bool _validToken;
+private string _validateUrl = "https://localhost:44330/api/admin/validate";
 
-    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
-    protected override async Task OnInitializedAsync()
-    {
-        var response = await apiService.SendToAPIAsync(HttpMethod.Post, _validateUrl, auth: true);
-        _validToken = response.IsSuccessStatusCode;
-        if (!_validToken && !navigationManager.Uri.Contains("signin"))
-            navigationManager.NavigateTo("/signin", forceLoad: true);
+protected override async Task OnInitializedAsync()
+{
+    var response = await apiService.SendToAPIAsync(HttpMethod.Post, _validateUrl, auth: true);
+    _validToken = response.IsSuccessStatusCode;
+    if (!_validToken && !(navigationManager.Uri.Contains("signin") || navigationManager.Uri.Contains("register")))
+        navigationManager.NavigateTo("/signin", forceLoad: true);
 
-        StateHasChanged();
-    }
+    StateHasChanged();
+}
 
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
+private void ToggleNavMenu()
+{
+    collapseNavMenu = !collapseNavMenu;
+}
 }

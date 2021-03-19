@@ -1,0 +1,12 @@
+﻿table {
+    transition: opacity 0.25s;
+}
+
+.updating {
+    opacity: 0.75;
+    cursor: wait;
+}
+
+.updating a {
+    cursor: wait !important;
+}

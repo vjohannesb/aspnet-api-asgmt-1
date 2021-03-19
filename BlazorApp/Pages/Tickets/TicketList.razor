@@ -3,7 +3,7 @@
 <ValidateToken />
 
 <h1>Tickets</h1>
-
+<TimeDisplay @ref="_timeDisplay"/>
 
 <button @onclick="AddTicket" class="btn btn-primary mb-3 p-2">
     <span class="oi oi-plus" aria-hidden="true"></span>
@@ -15,12 +15,7 @@
     Refresh
 </button>
 
-@if (!string.IsNullOrEmpty(_error))
-{
-    <div class="alert alert-danger">
-        <span>@_error</span>
-    </div>
-}
+<MessageBox Error="@_error"/>
 
 @if (tickets == null || tickets.Length < 1)
 {
@@ -28,7 +23,8 @@
 }
 else
 {
-    <table class="table table-hover table-striped table-sm align-middle font-monospace">
+    <table class="table table-hover table-striped table-sm align-middle font-monospace 
+           @(_refreshing ? "updating" : "")">
         <caption>List of tickets</caption>
         <thead>
             <tr class="text-center">
@@ -63,7 +59,8 @@ else
 
 @code {
     private TicketModel[] tickets;
-    private string _ticketsUrl = "https://localhost:44330/api/tickets";
+    private string _baseUrl = "https://localhost:44330/api/tickets";
+    private string _ticketsUrl;
     private bool _refreshing = false;
 
     private string _sortOrder = "desc";
@@ -72,24 +69,36 @@ else
     private string _message = "Loading...";
     private string _error;
 
+    protected TimeDisplay _timeDisplay;
+
     protected override async Task OnInitializedAsync()
     {
+        _ticketsUrl = _baseUrl;
         await UpdateList(_ticketsUrl);
     }
 
     private async Task SortBy(string filter)
     {
+        if (_refreshing)
+            return;
+
         if (_currentFilter == filter)
             _sortOrder = _sortOrder == "desc" ? "asc" : "desc";
         else
             _sortOrder = "desc";
 
-        await UpdateList($"{_ticketsUrl}?sort={filter}&order={_sortOrder}");
+        // Sparar filtret ifall man ex. trycker refresh så sorterar den fortfarande
+        _ticketsUrl = $"{_baseUrl}?sort={filter}&order={_sortOrder}";
+        await UpdateList(_ticketsUrl);
         _currentFilter = filter;
     }
 
     private async Task UpdateList(string url)
     {
+        _refreshing = true;
+        _message = string.Empty;
+        _error = string.Empty;
+
         var response = await apiService.SendToAPIAsync(HttpMethod.Get, url, auth: true);
         if (response.IsSuccessStatusCode)
         {
@@ -97,8 +106,6 @@ else
 
             if (tickets.Length < 1)
                 _message = "No tickets available.";
-            else
-                _message = string.Empty;
         }
         else if (response.StatusCode == HttpStatusCode.Unauthorized)
             navigationManager.NavigateTo("/signin");
@@ -106,22 +113,21 @@ else
         {
             _error = $"Error loading tickets. {(int)response.StatusCode} {response.ReasonPhrase}";
             apiService.LogWarningIfDebug(await response.Content.ReadAsStringAsync(), _logger);
-            _message = string.Empty;
         }
+
+        _refreshing = false;
     }
 
     private async Task RefreshList()
     {
         if (!_refreshing)
         {
-            _refreshing = true;
             await UpdateList(_ticketsUrl);
-            _refreshing = false;
             StateHasChanged();
         }
     }
 
     private void AddTicket()
-    => navigationManager.NavigateTo("/tickets/add");
+    => navigationManager.NavigateTo("/addticket");
 
 }

@@ -18,6 +18,17 @@ namespace SharedLibrary.Models.Ticket
         {
         }
 
+        public TicketModel(TicketViewModel tvm)
+        {
+            TicketId = tvm.TicketId;
+            Description = tvm.Description;
+            DateCreated = tvm.DateCreated;
+            DateUpdated = tvm.DateUpdated;
+            Status = tvm.Status;
+            CustomerId = tvm.CustomerId;
+            AssignedAdminId = tvm.AdminId;
+        }
+
         [Key]
         [Required]
         public int TicketId { get; set; }
@@ -43,6 +54,9 @@ namespace SharedLibrary.Models.Ticket
 
         [NotMapped]
         public AdminViewModel AdminViewModel { get; set; }
+
+        [NotMapped]
+        public CustomerViewModel CustomerViewModel { get; set; }
     }
 
     // Explicit numrering för tydlighets skull

@@ -1,83 +1,73 @@
-﻿@page "/tickets/add"
+﻿@page "/addticket"
+@* "Egen" URI (istället för /tickets/add) då "Add Ticket" är ett eget menyval, 
+och NavLink matchar URI:n till /tickets vilket gör att både Add Ticket och Tickets blir .active när man är på Add Ticket.
+Kan ej använda NavLinkMatch.All då det tar bort .active när man ex. är inne på en specifik ticket*@
 @inject ILogger<AddTicket> _logger
 <ValidateToken />
 
 <h3>Register new ticket</h3>
-<p class="text-black-50 font-monospace">@(now ?? "")</p>
-
-@if (!string.IsNullOrEmpty(_location))
-{
-    <div class="alert alert-success">
-        <span>Ticket registered! </span>
-        <NavLink class="d-inline" role="button" @onclick="GoToTicket">Go to ticket</NavLink>
-    </div>
-}
-else if (!string.IsNullOrEmpty(_error))
-{
-    <div class="alert alert-danger">
-        <span>@_error</span>
-    </div>
-}
+<TimeDisplay />
+<MessageBox Message="@_message" Error="@_error" LinkAction="GoToTicket" MethodMessage="Go to ticket" />
 
 @if (_administrators == null)
 {
-    <p>@_message</p>
+    <p>Loading...</p>
 }
 else
 {
-<EditForm Model="ticket" OnValidSubmit="SubmitTicket">
-    <DataAnnotationsValidator />
+    <EditForm Model="ticket" OnValidSubmit="SubmitTicket">
+        <DataAnnotationsValidator />
 
-    <div class="mb-3">
-        <label class="form-label">Description</label>
-        <InputTextArea @bind-Value="@ticket.Description" class="form-control" rows="3" />
-        <ValidationMessage For="() => ticket.Description" />
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <InputTextArea @bind-Value="@ticket.Description" class="form-control" rows="3" />
+            <ValidationMessage For="() => ticket.Description" />
+        </div>
 
-    <div class="mb-3">
-        <label class="form-label">Status</label>
-        <InputSelect @bind-Value="@ticket.Status" class="form-select" aria-label="Select ticket status">
-            <option value="@TicketStatus.Open">Open</option>
-            <option value="@TicketStatus.Active">Active</option>
-            <option value="@TicketStatus.Closed">Closed</option>
-        </InputSelect>
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Status</label>
+            <InputSelect @bind-Value="@ticket.Status" class="form-select" aria-label="Select ticket status">
+                <option value="@TicketStatus.Open">Open</option>
+                <option value="@TicketStatus.Active">Active</option>
+                <option value="@TicketStatus.Closed">Closed</option>
+            </InputSelect>
+        </div>
 
-    <div class="mb-3">
-        <label class="form-label">Customer</label>
-        <InputSelect @bind-Value="@ticket.CustomerId" class="form-select" aria-label="Select a customer">
-            <option value="">Select a customer...</option>
-            @if (_customers != null)
-                {
-                @foreach (var customer in _customers)
+        <div class="mb-3">
+            <label class="form-label">Customer</label>
+            <InputSelect @bind-Value="@ticket.CustomerId" class="form-select" aria-label="Select a customer">
+                <option value="">Select a customer...</option>
+                @if (_customers != null)
                     {
-                    <option value="@customer.CustomerId">
-                        @customer.DisplayName
-                    </option>
+                    @foreach (var customer in _customers)
+                        {
+                        <option value="@customer.CustomerId">
+                            @customer.DisplayName
+                        </option>
+                        }
                     }
-                }
-        </InputSelect>
-    </div>
+            </InputSelect>
+        </div>
 
-    <div class="mb-3">
-        <label class="form-label">Assign an administrator</label>
-        <InputSelect @bind-Value="@ticket.AssignedAdminId" class="form-select" aria-label="Select an administrator">
-            <option value="">Select an administrator...</option>
-            @if (_administrators != null)
-                {
-                @foreach (var admin in _administrators)
+        <div class="mb-3">
+            <label class="form-label">Assign an administrator</label>
+            <InputSelect @bind-Value="@ticket.AssignedAdminId" class="form-select" aria-label="Select an administrator">
+                <option value="">Select an administrator...</option>
+                @if (_administrators != null)
                     {
-                    <option value="@admin.AdminId">
-                        @admin.DisplayName
-                    </option>
+                    @foreach (var admin in _administrators)
+                        {
+                        <option value="@admin.AdminId">
+                            @admin.DisplayName
+                        </option>
+                        }
                     }
-                }
-        </InputSelect>
-    </div>
+            </InputSelect>
+        </div>
 
-    <button type="submit" class="btn btn-success" disabled=@submitting>Submit</button>
-    <button class="btn btn-secondary ms-2" @onclick="GoToList" disabled=@submitting>Back to List</button>
-</EditForm>
+        <button type="submit" class="btn btn-success" disabled=@submitting>Submit</button>
+        <button class="btn btn-secondary ms-2" @onclick="GoToList" disabled=@submitting>Back to List</button>
+    </EditForm>
 
 }
 
@@ -92,7 +82,7 @@ else
     private string _token;
     private string _location;
     private string _error;
-    private string _message = "Loading...";
+    private string _message;
 
     private string _adminUrl = "https://localhost:44330/api/admin";
     private string _customersUrl = "https://localhost:44330/api/customers";
@@ -111,8 +101,6 @@ else
             if (customerResponse.IsSuccessStatusCode)
                 _customers = await customerResponse.Content.ReadFromJsonAsync<CustomerModel[]>();
         }
-        else if (adminResponse.StatusCode == HttpStatusCode.Unauthorized)
-            navigationManager.NavigateTo("/signin");
         else
         {
             _error = $"Could not connect to API. {(int)adminResponse.StatusCode} {adminResponse.ReasonPhrase}";
@@ -136,6 +124,7 @@ else
             // POST Ticket returnerar ticket-id i Result-fältet
             var payload = await response.Content.ReadFromJsonAsync<ResponseModel>();
             _location = $"/tickets/{payload.Result}";
+            _message = "Ticket created! ";
         }
         else
         {

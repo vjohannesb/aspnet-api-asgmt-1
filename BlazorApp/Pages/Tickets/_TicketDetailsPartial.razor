@@ -1,31 +1,31 @@
 ﻿<div class="row">
     <div class="row">
-        <div class="col-2 fw-bold">ID:</div>
-        <div class="col-10">@Ticket.TicketId</div>
+        <div class="col-12 col-md-3 col-lg-2 fw-bold">ID:</div>
+        <div class="col-9">@Ticket.TicketId</div>
     </div>
     <div class="row">
-        <div class="col-2 fw-bold">Status:</div>
-        <div class="col-10">@Ticket.Status</div>
+        <div class="col-12 col-md-3 col-lg-2 fw-bold">Status:</div>
+        <div class="col-9">@Ticket.Status</div>
     </div>
     <div class="row">
-        <div class="col-2 fw-bold">Created:</div>
-        <div class="col-10">@Ticket.DateCreated.ToString("yyyy-MM-dd HH:mm")</div>
+        <div class="col-12 col-md-3 col-lg-2 fw-bold">Created:</div>
+        <div class="col-9">@Ticket.DateCreated.ToString("yyyy-MM-dd HH:mm")</div>
     </div>
     <div class="row">
-        <div class="col-2 fw-bold">Updated:</div>
-        <div class="col-10">@Ticket.DateUpdated.ToString("yyyy-MM-dd HH:mm")</div>
+        <div class="col-12 col-md-3 col-lg-2 fw-bold">Updated:</div>
+        <div class="col-9">@Ticket.DateUpdated.ToString("yyyy-MM-dd HH:mm")</div>
     </div>
     <div class="row">
-        <div class="col-2 fw-bold">Customer:</div>
-        <div class="col-10">@(Ticket.Customer?.DisplayName ?? "None")</div>
+        <div class="col-12 col-md-3 col-lg-2 fw-bold">Customer:</div>
+        <div class="col-9">@(Ticket.Customer?.DisplayName ?? "None")</div>
     </div>
     <div class="row">
-        <div class="col-2 fw-bold">Administrator:</div>
-        <div class="col-10">@(Ticket.AdminViewModel?.DisplayName ?? "None")</div>
+        <div class="col-12 col-md-3 col-lg-2 fw-bold">Administrator:</div>
+        <div class="col-9">@(Ticket.Administrator?.DisplayName ?? "None")</div>
     </div>
     <div class="row mb-5">
         <div class="col-12 fw-bold mt-3">Description</div>
-        <div class="col-8">
+        <div class="col-8 ticket-description">
             @Ticket.Description
         </div>
     </div>
@@ -33,7 +33,7 @@
 
 @code {
     [Parameter]
-    public TicketModel Ticket { get; set; }
+    public TicketViewModel Ticket { get; set; }
 
     protected override void OnInitialized()
     {

@@ -1,16 +1,58 @@
 ﻿@page "/"
+<ValidateToken @ref="_validateToken" />
 
 <h1 class="text-center mt-5 justify-">Welcome@(_displayName != null ? " " + _displayName : "")!</h1>
 
+@if (_tickets != null)
+{
+    <div class="row mt-5 mb-3">
+        <div class="col-12 col-xl-4 mb-3 box box-open">
+            <h1 class="text-warning text-center">@_openTickets</h1>
+            <h2 class="text-center">Open Ticket@(_openTickets > 1 || _openTickets == 0 ? "s" : "")</h2>
+            <hr class="d-none d-xl-block">
+        </div>
+        <div class="col-12 col-xl-4 mb-3 box box-active">
+            <h1 class="text-info text-center">@_activeTickets</h1>
+            <h2 class="text-center">Active Ticket@(_activeTickets > 1 || _activeTickets == 0 ? "s" : "")</h2>
+            <hr class="d-none d-xl-block">
+        </div>
+        <div class="col-12 col-xl-4 mb-3 box box-closed">
+            <h1 class="text-teal text-center">@_closedTickets</h1>
+            <h2 class="text-center">Closed Ticket@(_closedTickets > 1 || _closedTickets == 0 ? "s" : "")</h2>
+            <hr class="d-none d-xl-block">
+        </div>
+    </div>
+}
+
+
 @code {
+    private ValidateToken _validateToken;
+    private TicketModel[] _tickets;
 
     private string _displayName;
-    private string _validateUrl = "https://localhost:44330/api/admin/validate";
+    private string _ticketsUrl = "https://localhost:44330/api/tickets";
 
-    protected override async Task OnInitializedAsync()
+    private int _openTickets, _activeTickets, _closedTickets;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!firstRender)
+            return;
+
         var tokenDisplayName = await apiService.GetDisplayName();
         if (!string.IsNullOrEmpty(tokenDisplayName))
             _displayName = tokenDisplayName.Split(" ")[0];
+
+        var request = await apiService.SendToAPIAsync(HttpMethod.Get, _ticketsUrl, auth: true);
+        if (request.IsSuccessStatusCode)
+        {
+            _tickets = await request.Content.ReadFromJsonAsync<TicketModel[]>();
+
+            _openTickets = _tickets.Where(t => t.Status == TicketStatus.Open).Count();
+            _activeTickets = _tickets.Where(t => t.Status == TicketStatus.Active).Count();
+            _closedTickets = _tickets.Where(t => t.Status == TicketStatus.Closed).Count();
+
+            StateHasChanged();
+        }
     }
 } 

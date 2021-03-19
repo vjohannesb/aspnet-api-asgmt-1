@@ -1,0 +1,33 @@
+﻿@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert alert-success">
+        <span>@Message</span>
+        @if (LinkAction != null)
+        {
+            <NavLink class="d-inline" role="button" @onclick="InvokeLinkAction">@MethodMessage</NavLink>
+        }
+    </div>
+}
+else if (!string.IsNullOrEmpty(Error))
+{
+    <div class="alert alert-danger">
+        <span>@Error</span>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string Message { get; set; }
+
+    [Parameter]
+    public Action LinkAction { get; set; }
+
+    [Parameter]
+    public string MethodMessage { get; set; }
+
+    [Parameter]
+    public string Error { get; set; }
+
+    private void InvokeLinkAction()
+        => LinkAction?.Invoke();
+}

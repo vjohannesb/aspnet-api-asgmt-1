@@ -28,23 +28,21 @@ namespace WebApi.Controllers
 
         // GET: api/Customers
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CustomerModel>>> GetCustomers()
+        public async Task<ActionResult<IEnumerable<CustomerViewModel>>> GetCustomers()
         {
-            return await _context.Customers.ToListAsync();
+            var customers = await _context.Customers.ToListAsync();
+            var customerViewModels = customers.Select(c => new CustomerViewModel(c));
+            return Ok(customerViewModels);
         }
 
         // GET: api/Customers/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<CustomerModel>> GetCustomer(int id)
+        public async Task<ActionResult<CustomerViewModel>> GetCustomer(int id)
         {
-            var customerModel = await _context.Customers.FindAsync(id);
-
-            if (customerModel == null)
-            {
-                return NotFound();
-            }
-
-            return customerModel;
+            var customer = await _context.Customers.FindAsync(id);
+            return customer == null
+                ? NotFound()
+                : new CustomerViewModel(customer);
         }
 
         // PUT: api/Customers/5
@@ -73,28 +71,36 @@ namespace WebApi.Controllers
 
         // POST: api/Customers
         [HttpPost]
-        public async Task<ActionResult<CustomerModel>> PostCustomer(CustomerModel customerModel)
+        public async Task<ActionResult<CustomerViewModel>> PostCustomer(CustomerViewModel model)
         {
-            _context.Customers.Add(customerModel);
-            await _context.SaveChangesAsync();
-            // Location header = api/customers/{customerId} + en payload med CustomerId som Result
-            return CreatedAtAction(nameof(GetCustomer), new { id = customerModel.CustomerId },
-                new ResponseModel(true, customerModel.CustomerId.ToString()));
+            var customer = new CustomerModel(model);
+            try
+            {
+                _context.Customers.Add(customer);
+                await _context.SaveChangesAsync();
+                // Location header = api/customers/{customerId} + en payload med CustomerId som Result
+                return CreatedAtAction(nameof(GetCustomer), new { id = customer.CustomerId },
+                    new ResponseModel(true, customer.CustomerId.ToString()));
+            }
+            catch (DbUpdateException)
+            {
+                if (CustomerExists(customer.CustomerId))
+                    return Conflict();
+                else
+                    throw;
+            }
         }
 
         // DELETE: api/Customers/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
-            var customerModel = await _context.Customers.FindAsync(id);
-            if (customerModel == null)
-            {
+            var customer = await _context.Customers.FindAsync(id);
+            if (customer == null)
                 return NotFound();
-            }
 
-            _context.Customers.Remove(customerModel);
+            _context.Customers.Remove(customer);
             await _context.SaveChangesAsync();
-
             return NoContent();
         }
 
