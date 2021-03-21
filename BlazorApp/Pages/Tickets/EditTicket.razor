@@ -144,7 +144,7 @@ else
             // POST Ticket returnerar ticket-id i Result-fältet
             var payload = await response.Content.ReadFromJsonAsync<ResponseModel>();
             _location = $"/tickets/{payload.Result}";
-            _message = "Ticket created! ";
+            _message = "Ticket updated! ";
         }
         else if (response.StatusCode == HttpStatusCode.Unauthorized)
             navigationManager.NavigateTo("/signin");

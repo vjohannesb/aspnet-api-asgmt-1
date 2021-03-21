@@ -102,16 +102,17 @@ else
 
             if (_tickets.Length < 1)
                 _message = "No tickets available.";
+            else
+                _message = string.Empty;
         }
         else if (response.StatusCode == HttpStatusCode.Unauthorized)
             navigationManager.NavigateTo("/signin");
         else
         {
             _error = $"Error loading tickets. {(int)response.StatusCode} {response.ReasonPhrase}";
+            _message = string.Empty;
             apiService.LogWarningIfDebug(await response.Content.ReadAsStringAsync(), _logger);
         }
-
-        _message = string.Empty;
         _refreshing = false;
     }
 

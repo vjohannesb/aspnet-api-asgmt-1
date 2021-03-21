@@ -10,7 +10,7 @@ using WebApi.Data;
 namespace WebApi.Migrations
 {
     [DbContext(typeof(SqlDbContext))]
-    [Migration("20210317142928_init")]
+    [Migration("20210321123511_init")]
     partial class init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -18,7 +18,7 @@ namespace WebApi.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("ProductVersion", "5.0.3")
+                .HasAnnotation("ProductVersion", "5.0.4")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("SharedLibrary.Models.Admin.AdminModel", b =>
@@ -38,6 +38,7 @@ namespace WebApi.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
                     b.Property<string>("FirstName")
@@ -49,6 +50,9 @@ namespace WebApi.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<byte[]>("Token")
+                        .HasColumnType("varbinary(max)");
 
                     b.HasKey("AdminId");
 
@@ -64,6 +68,7 @@ namespace WebApi.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
                     b.Property<string>("FirstName")
@@ -88,7 +93,7 @@ namespace WebApi.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int?>("AssignedAdminId")
+                    b.Property<int?>("AdminId")
                         .HasColumnType("int");
 
                     b.Property<int?>("CustomerId")
@@ -109,7 +114,7 @@ namespace WebApi.Migrations
 
                     b.HasKey("TicketId");
 
-                    b.HasIndex("AssignedAdminId");
+                    b.HasIndex("AdminId");
 
                     b.HasIndex("CustomerId");
 
@@ -118,15 +123,15 @@ namespace WebApi.Migrations
 
             modelBuilder.Entity("SharedLibrary.Models.Ticket.TicketModel", b =>
                 {
-                    b.HasOne("SharedLibrary.Models.Admin.AdminModel", "AssignedAdmin")
+                    b.HasOne("SharedLibrary.Models.Admin.AdminModel", "Admin")
                         .WithMany("Tickets")
-                        .HasForeignKey("AssignedAdminId");
+                        .HasForeignKey("AdminId");
 
                     b.HasOne("SharedLibrary.Models.Customer.CustomerModel", "Customer")
                         .WithMany("Tickets")
                         .HasForeignKey("CustomerId");
 
-                    b.Navigation("AssignedAdmin");
+                    b.Navigation("Admin");
 
                     b.Navigation("Customer");
                 });
