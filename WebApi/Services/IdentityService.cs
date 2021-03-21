@@ -5,13 +5,11 @@ using Microsoft.IdentityModel.Tokens;
 using SharedLibrary.Models;
 using SharedLibrary.Models.Admin;
 using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using WebApi.Controllers;
 using WebApi.Data;
 
 namespace WebApi.Services
@@ -34,12 +32,18 @@ namespace WebApi.Services
         public async Task<IActionResult> CreateAdminAsync(RegisterModel model)
         {
             if (string.IsNullOrEmpty(model.FirstName) ||
-                string.IsNullOrEmpty(model.LastName)  ||
-                string.IsNullOrEmpty(model.Password)  ||
+                string.IsNullOrEmpty(model.LastName) ||
+                string.IsNullOrEmpty(model.Password) ||
                 string.IsNullOrEmpty(model.Email))
+            {
                 return new BadRequestObjectResult(
-                    new { status = 400, title = "Bad Request", 
-                        Message = "First name, last name, email and password are required." });
+                    new
+                    {
+                        status = 400,
+                        title = "Bad Request",
+                        Message = "First name, last name, email and password are required."
+                    });
+            }
 
             // BadRequest istället för Conflict för att dölja registrerade e-postadresser
             if (EmailRegistered(model.Email))
@@ -64,7 +68,7 @@ namespace WebApi.Services
 
             // Returnera ej lösen, något extra säkert
             return new CreatedAtActionResult(
-                "GetAdmin", 
+                "GetAdmin",
                 "Admin",
                 new { id = admin.AdminId },
                 new { id = admin.AdminId, email = admin.Email }
@@ -86,8 +90,8 @@ namespace WebApi.Services
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new Claim[] 
-                    { 
+                Subject = new ClaimsIdentity(new Claim[]
+                    {
                         new Claim("UserId", admin.AdminId.ToString()),
                         new Claim("DisplayName", $"{admin.FirstName} {admin.LastName}")
                     }),

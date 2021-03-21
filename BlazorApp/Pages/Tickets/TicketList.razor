@@ -19,7 +19,7 @@
 
 @if (tickets == null || tickets.Length < 1)
 {
-    <p>@_message</p>
+    <p>@(_message ?? "Loading...")</p>
 }
 else
 {

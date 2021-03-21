@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SharedLibrary.Models;
 using SharedLibrary.Models.Customer;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using WebApi.Data;
 using WebApi.Filters;
+using WebApi.Services;
 
 namespace WebApi.Controllers
 {
@@ -19,18 +18,18 @@ namespace WebApi.Controllers
     [ApiController]
     public class CustomersController : ControllerBase
     {
-        private readonly SqlDbContext _context;
+        private readonly IDbService _dbService;
 
-        public CustomersController(SqlDbContext context)
+        public CustomersController(IDbService dbService)
         {
-            _context = context;
+            _dbService = dbService;
         }
 
         // GET: api/Customers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CustomerViewModel>>> GetCustomers()
         {
-            var customers = await _context.Customers.ToListAsync();
+            var customers = await _dbService.GetCustomersAsync();
             var customerViewModels = customers.Select(c => new CustomerViewModel(c));
             return Ok(customerViewModels);
         }
@@ -39,74 +38,18 @@ namespace WebApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<CustomerViewModel>> GetCustomer(int id)
         {
-            var customer = await _context.Customers.FindAsync(id);
+            var customer = await _dbService.GetCustomerAsync(id);
             return customer == null
                 ? NotFound()
                 : new CustomerViewModel(customer);
         }
 
-        // PUT: api/Customers/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutCustomer(int id, CustomerModel customerModel)
-        {
-            if (id != customerModel.CustomerId)
-                return BadRequest();
-
-            _context.Entry(customerModel).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CustomerExists(id))
-                    return NotFound();
-                else
-                    throw;
-            }
-
-            return NoContent();
-        }
-
         // POST: api/Customers
         [HttpPost]
-        public async Task<ActionResult<CustomerViewModel>> PostCustomer(CustomerViewModel model)
+        public async Task<IActionResult> PostCustomer(CustomerViewModel model)
         {
             var customer = new CustomerModel(model);
-            try
-            {
-                _context.Customers.Add(customer);
-                await _context.SaveChangesAsync();
-                // Location header = api/customers/{customerId} + en payload med CustomerId som Result
-                return CreatedAtAction(nameof(GetCustomer), new { id = customer.CustomerId },
-                    new ResponseModel(true, customer.CustomerId.ToString()));
-            }
-            catch (DbUpdateException)
-            {
-                if (CustomerExists(customer.CustomerId))
-                    return Conflict();
-                else
-                    throw;
-            }
-        }
-
-        // DELETE: api/Customers/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCustomer(int id)
-        {
-            var customer = await _context.Customers.FindAsync(id);
-            if (customer == null)
-                return NotFound();
-
-            _context.Customers.Remove(customer);
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
-
-        private bool CustomerExists(int id)
-        {
-            return _context.Customers.Any(c => c.CustomerId == id);
+            return await _dbService.CreateCustomerAsync(customer);
         }
     }
 }

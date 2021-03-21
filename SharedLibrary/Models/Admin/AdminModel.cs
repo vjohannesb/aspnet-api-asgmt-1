@@ -1,13 +1,9 @@
-﻿using SharedLibrary.Models.Ticket;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace SharedLibrary.Models.Admin
 {
@@ -54,7 +50,7 @@ namespace SharedLibrary.Models.Admin
 
             for (var i = 0; i < saltedHash.Length; i++)
                 if (saltedHash[i] != AdminHash[i])
-                    return false; 
+                    return false;
 
             return true;
         }

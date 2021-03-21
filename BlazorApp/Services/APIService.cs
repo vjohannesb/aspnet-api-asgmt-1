@@ -25,7 +25,7 @@ namespace BlazorApp.Services
         private readonly ILocalStorageService _localStorage;
         private readonly HttpClient _httpClient;
         private string _token;
-        private string _signInUrl = "https://localhost:44330/api/admin/signin";
+        private readonly string _signInUrl = "https://localhost:44330/api/admin/signin";
 
         public APIService(HttpClient httpClient, ILocalStorageService localStorage)
         {
@@ -117,8 +117,8 @@ namespace BlazorApp.Services
             var response = await SendToAPIAsync(HttpMethod.Post, _signInUrl, model);
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<ResponseModel>();
-                await SaveTokenAsync(result.Result);
+                var payload = await response.Content.ReadFromJsonAsync<ResponseModel>();
+                await SaveTokenAsync(payload.Result);
             }
             return response;
         }

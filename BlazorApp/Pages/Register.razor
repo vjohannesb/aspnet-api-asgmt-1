@@ -63,7 +63,6 @@
 @code {
     private string _error;
     private string _registerUrl = "https://localhost:44330/api/admin/register";
-    private string _signInUrl = "https://localhost:44330/api/admin/signin";
     private string _validateUrl = "https://localhost:44330/api/admin/validate";
 
     private bool submitting = false;
@@ -87,10 +86,7 @@
         var response = await apiService.SendToAPIAsync(HttpMethod.Post, _registerUrl, _registerModel);
         if (response.IsSuccessStatusCode)
         {
-            var email = _registerModel.Email;
-            var password = _registerModel.Password;
-
-            var signin = await apiService.SignIn(new SignInModel { Email = email, Password = password });
+            var signin = await apiService.SignIn(new SignInModel { Email = _registerModel.Email, Password = _registerModel.Password });
             if (signin.IsSuccessStatusCode)
                 navigationManager.NavigateTo("/", forceLoad: true);
             else

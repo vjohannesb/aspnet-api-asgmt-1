@@ -1,12 +1,10 @@
-﻿<p class="text-black-50 font-monospace">@(_now ?? "") (UTC: @(_utcNow ?? ""))</p>
+﻿<p class="text-black-50 font-monospace">@(_now ?? "")</p>
 
 @code {
     private string _now;
-    private string _utcNow;
 
     protected override void OnInitialized()
     {
         _now = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
-        _utcNow = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm");
     }
 }

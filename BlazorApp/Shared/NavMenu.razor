@@ -52,24 +52,25 @@
 </div>
 
 @code {
-private bool collapseNavMenu = true;
-private bool _validToken;
-private string _validateUrl = "https://localhost:44330/api/admin/validate";
+    private bool collapseNavMenu = true;
+    private bool _validToken;
+    private string _validateUrl = "https://localhost:44330/api/admin/validate";
 
-private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
-protected override async Task OnInitializedAsync()
-{
-    var response = await apiService.SendToAPIAsync(HttpMethod.Post, _validateUrl, auth: true);
-    _validToken = response.IsSuccessStatusCode;
-    if (!_validToken && !(navigationManager.Uri.Contains("signin") || navigationManager.Uri.Contains("register")))
-        navigationManager.NavigateTo("/signin", forceLoad: true);
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await apiService.SendToAPIAsync(HttpMethod.Post, _validateUrl, auth: true);
+        _validToken = response.IsSuccessStatusCode;
+        var currentUrl = navigationManager.Uri;
+        if (!_validToken && !currentUrl.Contains("signin") && !currentUrl.Contains("register"))
+            navigationManager.NavigateTo("/signin", forceLoad: true);
 
-    StateHasChanged();
-}
+        StateHasChanged();
+    }
 
-private void ToggleNavMenu()
-{
-    collapseNavMenu = !collapseNavMenu;
-}
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
 }

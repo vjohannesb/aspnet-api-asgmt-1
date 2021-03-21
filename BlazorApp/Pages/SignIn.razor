@@ -40,7 +40,6 @@
 
 @code {
     private string _error;
-    private string _signInUrl = "https://localhost:44330/api/admin/signin";
     private string _validateUrl = "https://localhost:44330/api/admin/validate";
     private bool submitting = false;
 
@@ -64,8 +63,10 @@
 
         if (response.IsSuccessStatusCode)
             navigationManager.NavigateTo("/", forceLoad: true);
+        else if (response.StatusCode == HttpStatusCode.Unauthorized)
+            _error = "Incorrect email or password.";
         else
-            _error = "Unable to log in. Please try again.";
+            _error = $"{(int)response.StatusCode} {response.ReasonPhrase}";
         submitting = false;
     }
 

@@ -1,17 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SharedLibrary.Models;
-using SharedLibrary.Models.Admin;
 using SharedLibrary.Models.Ticket;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using WebApi.Data;
 using WebApi.Filters;
+using WebApi.Services;
 
 namespace WebApi.Controllers
 {
@@ -21,82 +20,29 @@ namespace WebApi.Controllers
     [Route("api/[controller]")]
     public class TicketsController : ControllerBase
     {
-        private readonly SqlDbContext _context;
-        private readonly ILogger<TicketsController> _logger;
+        private readonly IDbService _dbService;
 
-        public TicketsController(SqlDbContext context, ILogger<TicketsController> logger)
+        public TicketsController(IDbService dbService)
         {
-            _context = context;
-            _logger = logger;
+            _dbService = dbService;
         }
 
         // GET: api/Tickets
         // sort/order hämtas från querystring
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TicketViewModel>>> GetTickets(string sort = null, string order = null)
+        public async Task<IActionResult> GetTickets(string sort = null, string order = null)
         {
-            var tickets = await _context.Tickets
-                .Include(t => t.Customer)
-                .Include(t => t.AssignedAdmin)
-                .ToListAsync();
-            var ticketViewModels = tickets.Select(t => new TicketViewModel(t));
-
-            if (string.IsNullOrEmpty(sort))
-                return Ok(ticketViewModels);
-
-            switch (sort)
-            {
-                case "id":
-                    if (order == "desc")
-                        ticketViewModels = ticketViewModels.OrderByDescending(t => t.TicketId).ToList();
-                    else
-                        ticketViewModels = ticketViewModels.OrderBy(t => t.TicketId).ToList();
-                    break;
-                case "status":
-                    if (order == "desc")
-                        ticketViewModels = ticketViewModels.OrderByDescending(t => t.Status).ToList();
-                    else
-                        ticketViewModels = ticketViewModels.OrderBy(t => t.Status).ToList();
-                    break;
-                case "created":
-                    if (order == "desc")
-                        ticketViewModels = ticketViewModels.OrderByDescending(t => t.DateCreated).ToList();
-                    else
-                        ticketViewModels = ticketViewModels.OrderBy(t => t.DateCreated).ToList();
-                    break;
-                case "updated":
-                    if (order == "desc")
-                        ticketViewModels = ticketViewModels.OrderByDescending(t => t.DateUpdated).ToList();
-                    else
-                        ticketViewModels = ticketViewModels.OrderBy(t => t.DateUpdated).ToList();
-                    break;
-                // Specialare då Customer kan vara tomt,
-                // detta ser till så nullvärden alltid hamnar längst ner
-                case "customer":
-                    if (order == "desc")
-                        ticketViewModels = ticketViewModels.OrderBy(t => t.Customer == null)
-                            .ThenByDescending(t => t.Customer?.FirstName).ToList();
-                    else
-                        ticketViewModels = ticketViewModels.OrderBy(t => t.Customer == null)
-                            .ThenBy(t => t.Customer?.FirstName).ToList();
-                    break;
-                default:
-                    break;
-            }
-            return new OkObjectResult(ticketViewModels);
+            var tickets = await _dbService.GetTicketsAsync();            
+            return _dbService.SortTickets(tickets, sort, order);
         }
 
         // GET: api/Tickets/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<TicketViewModel>> GetTicket(int id)
+        public async Task<IActionResult> GetTicket(int id)
         {
-            var ticket = await _context.Tickets
-                .Include(t => t.Customer)
-                .Include(t => t.AssignedAdmin)
-                .FirstOrDefaultAsync(t => t.TicketId == id);
-
-            return ticket == null 
-                ? NotFound() 
+            var ticket = await _dbService.GetTicketAsync(id);
+            return ticket == null
+                ? NotFound()
                 : Ok(new TicketViewModel(ticket));
         }
 
@@ -104,74 +50,30 @@ namespace WebApi.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTicket(int id, TicketViewModel model)
         {
+            if (id != model.TicketId)
+                return new BadRequestResult();
+
             var ticket = new TicketModel(model);
-            ticket.DateUpdated = DateTime.UtcNow;
-
-            if (id != ticket.TicketId)
-                return BadRequest();
-
-            _context.Entry(ticket).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!TicketModelExists(id))
-                    return NotFound();
-                else
-                    throw;
-            }
-
-            return Ok(new ResponseModel(true, id.ToString()));
+            return await _dbService.UpdateTicketAsync(ticket);
         }
 
         // POST: api/Tickets
         [HttpPost]
-        public async Task<ActionResult<TicketModel>> PostTicket(TicketViewModel model)
+        public async Task<IActionResult> PostTicket(TicketViewModel model)
         {
             var ticket = new TicketModel(model);
-            // UTC för generell användning
-            ticket.DateCreated = DateTime.UtcNow;
-            ticket.DateUpdated = DateTime.UtcNow;
-
-            _context.Tickets.Add(ticket);
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                if (TicketModelExists(ticket.TicketId))
-                    return Conflict();
-                else
-                    throw;
-            }
-
-            // Location header = api/tickets/{ticketId} + en payload med TicketId som Result
-            return CreatedAtAction(nameof(GetTicket), new { id = ticket.TicketId }, 
-                new ResponseModel(true, ticket.TicketId.ToString()));
+            return await _dbService.CreateTicketAsync(ticket);
         }
 
         // DELETE: api/Tickets/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTicket(int id)
         {
-            var ticketModel = await _context.Tickets.FindAsync(id);
-            if (ticketModel == null)
-            {
+            var ticket = await _dbService.GetTicketAsync(id);
+            if (ticket == null)
                 return NotFound();
-            }
 
-            _context.Tickets.Remove(ticketModel);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return await _dbService.DeleteTicketAsync(ticket);
         }
-
-        private bool TicketModelExists(int id)
-            => _context.Tickets.Any(e => e.TicketId == id);
     }
 }

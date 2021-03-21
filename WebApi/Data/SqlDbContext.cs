@@ -2,16 +2,12 @@
 using SharedLibrary.Models.Admin;
 using SharedLibrary.Models.Customer;
 using SharedLibrary.Models.Ticket;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace WebApi.Data
 {
     public class SqlDbContext : DbContext
     {
-        public SqlDbContext(DbContextOptions<SqlDbContext> options) 
+        public SqlDbContext(DbContextOptions<SqlDbContext> options)
             : base(options) { }
 
         public DbSet<AdminModel> Administrators { get; set; }
