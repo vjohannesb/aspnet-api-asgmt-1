@@ -2,15 +2,13 @@
 
 <h3>Sign in</h3>
 <TimeDisplay />
+<MessageBox Error="@_error" />
 
-@if (!string.IsNullOrEmpty(_error))
+@if (_signInModel == null)
 {
-    <div class="alert alert-danger">
-        <span>@_error</span>
-    </div>
+<p>Loading...</p>
 }
-
-@if (_signInModel != null)
+else
 {
     <EditForm Model="@_signInModel" OnValidSubmit="@Login">
         <DataAnnotationsValidator />
@@ -40,7 +38,6 @@
 
 @code {
     private string _error;
-    private string _validateUrl = "https://localhost:44330/api/admin/validate";
     private bool submitting = false;
 
     private SignInModel _signInModel;
@@ -50,7 +47,7 @@
         _signInModel = new SignInModel();
 
         _error = string.Empty;
-        var response = await apiService.SendToAPIAsync(HttpMethod.Post, _validateUrl, auth: true);
+        var response = await apiService.SendToAPIAsync(HttpMethod.Post, apiService.ValidateUrl, auth: true);
         if (response.IsSuccessStatusCode)
             navigationManager.NavigateTo("/", forceLoad: true);
     }

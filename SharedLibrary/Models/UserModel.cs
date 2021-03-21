@@ -1,6 +1,4 @@
-﻿using SharedLibrary.Models.Ticket;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SharedLibrary.Models
@@ -24,7 +22,5 @@ namespace SharedLibrary.Models
         [EmailAddress]
         [Column(TypeName = "varchar(100)")]
         public string Email { get; set; }
-
-        public virtual IEnumerable<TicketModel> Tickets { get; set; }
     }
 }

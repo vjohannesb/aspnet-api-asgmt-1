@@ -1,7 +1,4 @@
 ﻿@page "/addticket"
-@* "Egen" URI (istället för /tickets/add) då "Add Ticket" är ett eget menyval, 
-och NavLink matchar URI:n till /tickets vilket gör att både Add Ticket och Tickets blir .active när man är på Add Ticket.
-Kan ej använda NavLinkMatch.All då det tar bort .active när man ex. är inne på en specifik ticket*@
 @inject ILogger<AddTicket> _logger
 <ValidateToken />
 
@@ -36,15 +33,19 @@ else
         <div class="mb-3">
             <label class="form-label">Customer</label>
             <InputSelect @bind-Value="@ticket.CustomerId" class="form-select" aria-label="Select a customer">
-                <option value="">Select a customer...</option>
-                @if (_customers != null)
+                @if (_customers != null && _customers.Count() > 0)
                     {
+                    <option value="">Select a customer...</option>
                     @foreach (var customer in _customers)
                         {
                         <option value="@customer.CustomerId">
                             @customer.DisplayName
                         </option>
                         }
+                    }
+                    else
+                    {
+                    <option value="">No customers available...</option>
                     }
             </InputSelect>
         </div>
@@ -54,11 +55,11 @@ else
             <InputSelect @bind-Value="@ticket.AdminId" class="form-select" aria-label="Select an administrator">
                 <option value="">Select an administrator...</option>
                 @foreach (var admin in _administrators)
-                {
-                <option value="@admin.AdminId">
-                    @admin.DisplayName
-                </option>
-                }
+                    {
+                    <option value="@admin.AdminId">
+                        @admin.DisplayName
+                    </option>
+                    }
             </InputSelect>
         </div>
 
@@ -72,31 +73,27 @@ else
 @code {
     private TicketViewModel ticket;
     private IEnumerable<AdminViewModel> _administrators;
-    private IEnumerable<CustomerModel> _customers;
+    private IEnumerable<CustomerViewModel> _customers;
 
-    private bool submitting = false;
-    private string now;
-    private string _location;
     private string _error;
     private string _message;
-
-    private string _adminUrl = "https://localhost:44330/api/admin";
-    private string _customersUrl = "https://localhost:44330/api/customers";
-    private string _ticketsUrl = "https://localhost:44330/api/tickets";
+    private string _location;
+    private bool submitting = false;
 
     protected override async Task OnInitializedAsync()
     {
         ticket = new TicketViewModel();
-        now = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
 
-        var adminResponse = await apiService.SendToAPIAsync(HttpMethod.Get, _adminUrl, auth: true);
+        var adminResponse = await apiService.SendToAPIAsync(HttpMethod.Get, apiService.AdminsUrl, auth: true);
         if (adminResponse.IsSuccessStatusCode)
         {
             _administrators = await adminResponse.Content.ReadFromJsonAsync<AdminViewModel[]>();
-            var customerResponse = await apiService.SendToAPIAsync(HttpMethod.Get, _customersUrl, auth: true);
+            var customerResponse = await apiService.SendToAPIAsync(HttpMethod.Get, apiService.CustomersUrl, auth: true);
             if (customerResponse.IsSuccessStatusCode)
-                _customers = await customerResponse.Content.ReadFromJsonAsync<CustomerModel[]>();
+                _customers = await customerResponse.Content.ReadFromJsonAsync<CustomerViewModel[]>();
         }
+        else if (adminResponse.StatusCode == HttpStatusCode.Unauthorized)
+            navigationManager.NavigateTo("/signin");
         else
         {
             _error = $"Could not connect to API. {(int)adminResponse.StatusCode} {adminResponse.ReasonPhrase}";
@@ -112,7 +109,7 @@ else
         _message = string.Empty;
         submitting = true;
 
-        var response = await apiService.SendToAPIAsync(HttpMethod.Post, _ticketsUrl, ticket, true);
+        var response = await apiService.SendToAPIAsync(HttpMethod.Post, apiService.TicketsUrl, ticket, true);
         if (response.IsSuccessStatusCode)
         {
             ticket = new TicketViewModel();

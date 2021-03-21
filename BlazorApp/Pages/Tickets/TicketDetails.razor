@@ -7,44 +7,42 @@
 <MessageBox Error="@_error" />
 
 
-@if (_ticket != null)
+@if (_ticket == null)
+{
+<p>Loading...</p>
+}
+else
 {
     <_TicketDetailsPartial Ticket="_ticket" />
 
-<div class="row">
-    <button class="col-12 col-sm-3 col-lg-2 mb-2 me-sm-2 btn btn-primary" @onclick="GoToEdit">Edit ticket</button>
-    <button class="col-12 col-sm-3 col-lg-2 mb-2 me-sm-2 btn btn-danger" @onclick="GoToDelete">Delete ticket</button>
-    <button class="col-12 col-sm-3 col-lg-2 mb-2 me-sm-2 btn btn-secondary" @onclick="GoToList">Back to List</button>
-</div>
+    <div class="row">
+        <button class="col-12 col-sm-3 col-lg-2 mb-2 me-sm-2 btn btn-primary" @onclick="GoToEdit">Edit ticket</button>
+        <button class="col-12 col-sm-3 col-lg-2 mb-2 me-sm-2 btn btn-danger" @onclick="GoToDelete">Delete ticket</button>
+        <button class="col-12 col-sm-3 col-lg-2 mb-2 me-sm-2 btn btn-secondary" @onclick="GoToList">Back to List</button>
+    </div>
 }
 
 @code {
     [Parameter]
     public int Id { get; set; }
 
-    private string _ticketUrl = "https://localhost:44330/api/tickets";
-
     private TicketViewModel _ticket;
     private string _error;
-    private string _message = "Loading...";
-
+    private string _ticketUrl;
 
     protected override async Task OnInitializedAsync()
     {
-        _ticketUrl += $"/{Id}";
+        _ticketUrl = $"{apiService.TicketsUrl}/{Id}";
         var response = await apiService.SendToAPIAsync(HttpMethod.Get, _ticketUrl, auth: true);
         if (response.IsSuccessStatusCode)
-        {
             _ticket = await response.Content.ReadFromJsonAsync<TicketViewModel>();
-            _message = string.Empty;
-        }
+        else if (response.StatusCode == HttpStatusCode.Unauthorized)
+            navigationManager.NavigateTo("/signin");
         else
         {
             _error = $"{(int)response.StatusCode} {response.ReasonPhrase}";
             apiService.LogWarningIfDebug(await response.Content.ReadAsStringAsync(), _logger);
         }
-
-        _message = string.Empty;
     }
 
     private void GoToList()

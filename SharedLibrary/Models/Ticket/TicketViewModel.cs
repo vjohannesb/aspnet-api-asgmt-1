@@ -18,8 +18,8 @@ namespace SharedLibrary.Models.Ticket
             Status = tm.Status;
             CustomerId = tm.CustomerId;
             Customer = tm.Customer != null ? new CustomerViewModel(tm.Customer) : null;
-            AdminId = tm.AssignedAdminId;
-            Administrator = tm.AssignedAdmin != null ? new AdminViewModel(tm.AssignedAdmin) : null;
+            AdminId = tm.AdminId;
+            Administrator = tm.Admin != null ? new AdminViewModel(tm.Admin) : null;
         }
 
         public int TicketId { get; set; }

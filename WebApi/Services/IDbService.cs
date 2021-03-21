@@ -13,12 +13,11 @@ namespace WebApi.Services
         public Task<IActionResult> CreateCustomerAsync(CustomerModel model);
 
 
-        public Task<TicketModel> GetTicketAsync(int? ticketId);
-
         /// <summary>
         /// Konverterar TicketModels till TicketViewModels och försöker sortera per givna parametrar
         /// </summary>
         public IActionResult SortTickets(IEnumerable<TicketModel> tickets, string sort, string order);
+        public Task<TicketModel> GetTicketAsync(int? ticketId);
         public Task<IEnumerable<TicketModel>> GetTicketsAsync();
         public Task<IActionResult> CreateTicketAsync(TicketModel model);
         public Task<IActionResult> UpdateTicketAsync(TicketModel model);

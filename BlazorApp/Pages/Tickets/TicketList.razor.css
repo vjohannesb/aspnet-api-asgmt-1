@@ -2,11 +2,15 @@
     transition: opacity 0.25s;
 }
 
-.updating {
+.refreshing {
     opacity: 0.75;
     cursor: wait;
 }
 
-.updating a {
+.refreshing a {
+    cursor: wait !important;
+}
+
+.refreshing td {
     cursor: wait !important;
 }

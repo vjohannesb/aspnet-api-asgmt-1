@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using SharedLibrary.Models.Ticket;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SharedLibrary.Models.Customer
@@ -18,6 +20,8 @@ namespace SharedLibrary.Models.Customer
         [Key]
         [Required]
         public int CustomerId { get; set; }
+
+        public virtual IEnumerable<TicketModel> Tickets { get; set; }
 
         [NotMapped]
         public string DisplayName => $"{FirstName} {LastName}";

@@ -3,7 +3,7 @@
 
 <h1 class="text-center mt-5 justify-">Welcome@(_displayName != null ? " " + _displayName : "")!</h1>
 
-@if (_tickets != null)
+@if (_statuses != null)
 {
     <div class="row mt-5 mb-3">
         <div class="col-12 col-xl-4 mb-3 box box-open">
@@ -27,10 +27,9 @@
 
 @code {
     private ValidateToken _validateToken;
-    private TicketModel[] _tickets;
+    private Dictionary<string, int> _statuses;
 
     private string _displayName;
-    private string _ticketsUrl = "https://localhost:44330/api/tickets";
 
     private int _openTickets, _activeTickets, _closedTickets;
 
@@ -43,14 +42,14 @@
         if (!string.IsNullOrEmpty(tokenDisplayName))
             _displayName = tokenDisplayName.Split(" ")[0];
 
-        var request = await apiService.SendToAPIAsync(HttpMethod.Get, _ticketsUrl, auth: true);
+        var request = await apiService.SendToAPIAsync(HttpMethod.Get, apiService.StatusUrl, auth: true);
         if (request.IsSuccessStatusCode)
         {
-            _tickets = await request.Content.ReadFromJsonAsync<TicketModel[]>();
+            _statuses = await request.Content.ReadFromJsonAsync<Dictionary<string, int>>();
 
-            _openTickets = _tickets.Where(t => t.Status == TicketStatus.Open).Count();
-            _activeTickets = _tickets.Where(t => t.Status == TicketStatus.Active).Count();
-            _closedTickets = _tickets.Where(t => t.Status == TicketStatus.Closed).Count();
+            _openTickets = _statuses["Open"];
+            _activeTickets = _statuses["Active"];
+            _closedTickets = _statuses["Closed"];
 
             StateHasChanged();
         }

@@ -54,13 +54,12 @@
 @code {
     private bool collapseNavMenu = true;
     private bool _validToken;
-    private string _validateUrl = "https://localhost:44330/api/admin/validate";
 
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
     protected override async Task OnInitializedAsync()
     {
-        var response = await apiService.SendToAPIAsync(HttpMethod.Post, _validateUrl, auth: true);
+        var response = await apiService.SendToAPIAsync(HttpMethod.Post, apiService.ValidateUrl, auth: true);
         _validToken = response.IsSuccessStatusCode;
         var currentUrl = navigationManager.Uri;
         if (!_validToken && !currentUrl.Contains("signin") && !currentUrl.Contains("register"))

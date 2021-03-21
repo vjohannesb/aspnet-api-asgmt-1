@@ -1,26 +1,14 @@
 ﻿@page "/tickets/{id:int}/edit"
 @inject ILogger<EditTicket> _logger
+<ValidateToken />
 
 <h3>Edit ticket</h3>
 <TimeDisplay />
-
-@if (!string.IsNullOrEmpty(_location))
-{
-    <div class="alert alert-success">
-        <span>Ticket registered! </span>
-        <NavLink class="d-inline" role="button" @onclick="GoToTicket">Go to ticket</NavLink>
-    </div>
-}
-else if (!string.IsNullOrEmpty(_error))
-{
-    <div class="alert alert-danger">
-        <span>@_error</span>
-    </div>
-}
+<MessageBox Message="@_message" Error="@_error" LinkAction="GoToTicket" MethodMessage="Go to ticket" />
 
 @if (_administrators == null)
 {
-    <p>@_message</p>
+    <p>Loading...</p>
 }
 else
 {
@@ -105,20 +93,15 @@ else
     private IEnumerable<CustomerViewModel> _customers;
 
     private bool submitting = false;
-    private string now;
     private string _location;
     private string _error;
-    private string _message = "Loading...";
+    private string _message;
 
-    private string _adminUrl = "https://localhost:44330/api/admin";
-    private string _customersUrl = "https://localhost:44330/api/customers";
-    private string _ticketsUrl = "https://localhost:44330/api/tickets";
     private string _ticketUrl;
 
     protected override async Task OnInitializedAsync()
     {
-        _ticketUrl = $"{_ticketsUrl}/{Id}";
-        now = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+        _ticketUrl = $"{apiService.TicketsUrl}/{Id}";
 
         var ticketResponse = await apiService.SendToAPIAsync(HttpMethod.Get, _ticketUrl, auth: true);
         if (ticketResponse.IsSuccessStatusCode)
@@ -126,16 +109,15 @@ else
         else
         {
             _error = $"Could not get ticket. {(int)ticketResponse.StatusCode} {ticketResponse.ReasonPhrase}";
-            _message = string.Empty;
             apiService.LogWarningIfDebug(await ticketResponse.Content.ReadAsStringAsync(), _logger);
             return;
         }
 
-        var adminResponse = await apiService.SendToAPIAsync(HttpMethod.Get, _adminUrl, auth: true);
+        var adminResponse = await apiService.SendToAPIAsync(HttpMethod.Get, apiService.AdminsUrl, auth: true);
         if (adminResponse.IsSuccessStatusCode)
         {
             _administrators = await adminResponse.Content.ReadFromJsonAsync<AdminViewModel[]>();
-            var customerResponse = await apiService.SendToAPIAsync(HttpMethod.Get, _customersUrl, auth: true);
+            var customerResponse = await apiService.SendToAPIAsync(HttpMethod.Get, apiService.CustomersUrl, auth: true);
             if (customerResponse.IsSuccessStatusCode)
                 _customers = await customerResponse.Content.ReadFromJsonAsync<CustomerViewModel[]>();
         }
@@ -151,10 +133,10 @@ else
 
     private async Task SaveEdit()
     {
+        submitting = true;
         _location = string.Empty;
         _error = string.Empty;
         _message = string.Empty;
-        submitting = true;
 
         var response = await apiService.SendToAPIAsync(HttpMethod.Put, _ticketUrl, _ticket, true);
         if (response.IsSuccessStatusCode)
@@ -162,7 +144,10 @@ else
             // POST Ticket returnerar ticket-id i Result-fältet
             var payload = await response.Content.ReadFromJsonAsync<ResponseModel>();
             _location = $"/tickets/{payload.Result}";
+            _message = "Ticket created! ";
         }
+        else if (response.StatusCode == HttpStatusCode.Unauthorized)
+            navigationManager.NavigateTo("/signin");
         else
         {
             _error = $"Could not update ticket. {(int)response.StatusCode} {response.ReasonPhrase}";

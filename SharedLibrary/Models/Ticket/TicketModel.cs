@@ -21,7 +21,7 @@ namespace SharedLibrary.Models.Ticket
             DateUpdated = tvm.DateUpdated;
             Status = tvm.Status;
             CustomerId = tvm.CustomerId;
-            AssignedAdminId = tvm.AdminId;
+            AdminId = tvm.AdminId;
         }
 
         [Key]
@@ -44,14 +44,8 @@ namespace SharedLibrary.Models.Ticket
         public virtual int? CustomerId { get; set; }
         public virtual CustomerModel Customer { get; set; }
 
-        public virtual int? AssignedAdminId { get; set; }
-        public virtual AdminModel AssignedAdmin { get; set; }
-
-        [NotMapped]
-        public AdminViewModel AdminViewModel { get; set; }
-
-        [NotMapped]
-        public CustomerViewModel CustomerViewModel { get; set; }
+        public virtual int? AdminId { get; set; }
+        public virtual AdminModel Admin { get; set; }
     }
 
     // Explicit numrering för tydlighets skull

@@ -3,7 +3,7 @@
 <ValidateToken />
 
 <h1>Tickets</h1>
-<TimeDisplay @ref="_timeDisplay"/>
+<TimeDisplay />
 
 <button @onclick="AddTicket" class="btn btn-primary mb-3 p-2">
     <span class="oi oi-plus" aria-hidden="true"></span>
@@ -15,16 +15,16 @@
     Refresh
 </button>
 
-<MessageBox Error="@_error"/>
+<MessageBox Error="@_error" />
 
-@if (tickets == null || tickets.Length < 1)
+@if (_tickets == null || _tickets.Length < 1)
 {
     <p>@(_message ?? "Loading...")</p>
 }
 else
 {
-    <table class="table table-hover table-striped table-sm align-middle font-monospace 
-           @(_refreshing ? "updating" : "")">
+    <table class="table table-hover table-striped table-sm align-middle font-monospace
+           @(_refreshing ? "refreshing" : "")">
         <caption>List of tickets</caption>
         <thead>
             <tr class="text-center">
@@ -49,7 +49,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var ticket in tickets)
+            @foreach (var ticket in _tickets)
             {
                 <TicketListItem Ticket="@ticket" />
             }
@@ -58,8 +58,7 @@ else
 }
 
 @code {
-    private TicketModel[] tickets;
-    private string _baseUrl = "https://localhost:44330/api/tickets";
+    private TicketViewModel[] _tickets;
     private string _ticketsUrl;
     private bool _refreshing = false;
 
@@ -69,11 +68,9 @@ else
     private string _message = "Loading...";
     private string _error;
 
-    protected TimeDisplay _timeDisplay;
-
     protected override async Task OnInitializedAsync()
     {
-        _ticketsUrl = _baseUrl;
+        _ticketsUrl = apiService.TicketsUrl;
         await UpdateList(_ticketsUrl);
     }
 
@@ -88,7 +85,7 @@ else
             _sortOrder = "desc";
 
         // Sparar filtret ifall man ex. trycker refresh så sorterar den fortfarande
-        _ticketsUrl = $"{_baseUrl}?sort={filter}&order={_sortOrder}";
+        _ticketsUrl = $"{apiService.TicketsUrl}?sort={filter}&order={_sortOrder}";
         await UpdateList(_ticketsUrl);
         _currentFilter = filter;
     }
@@ -102,9 +99,9 @@ else
         var response = await apiService.SendToAPIAsync(HttpMethod.Get, url, auth: true);
         if (response.IsSuccessStatusCode)
         {
-            tickets = await response.Content.ReadFromJsonAsync<TicketModel[]>();
+            _tickets = await response.Content.ReadFromJsonAsync<TicketViewModel[]>();
 
-            if (tickets.Length < 1)
+            if (_tickets.Length < 1)
                 _message = "No tickets available.";
         }
         else if (response.StatusCode == HttpStatusCode.Unauthorized)

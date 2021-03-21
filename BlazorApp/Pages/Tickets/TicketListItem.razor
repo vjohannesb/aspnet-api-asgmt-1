@@ -1,6 +1,4 @@
-﻿@inherits ComponentBase
-
-<tr @onclick="() => GoToDetails(Ticket.TicketId)">
+﻿<tr @onclick="() => GoToDetails(Ticket.TicketId)">
     <td class="text-muted">@Ticket.TicketId.ToString()</td>
     <td class="ticket-description" title="@Ticket.Description">
         @Ticket.Description
@@ -23,7 +21,7 @@
 
 @code {
     [Parameter]
-    public TicketModel Ticket { get; set; }
+    public TicketViewModel Ticket { get; set; }
 
     protected override void OnInitialized()
     {

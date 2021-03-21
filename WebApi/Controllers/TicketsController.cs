@@ -1,14 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using SharedLibrary.Models;
 using SharedLibrary.Models.Ticket;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using WebApi.Data;
 using WebApi.Filters;
 using WebApi.Services;
 
@@ -32,8 +27,22 @@ namespace WebApi.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTickets(string sort = null, string order = null)
         {
-            var tickets = await _dbService.GetTicketsAsync();            
+            var tickets = await _dbService.GetTicketsAsync();
             return _dbService.SortTickets(tickets, sort, order);
+        }
+
+        // GET: api/Tickets/status
+        // För att lättare hämta hur många av varje ticket det finns (visas på startsidan)
+        [HttpGet("status")]
+        public async Task<ActionResult<Dictionary<string, int>>> GetTicketStatus()
+        {
+            var tickets = await _dbService.GetTicketsAsync();
+            return new Dictionary<string, int>
+            {
+                { "Open", tickets.Where(t => t.Status == TicketStatus.Open).Count() },
+                { "Active", tickets.Where(t => t.Status == TicketStatus.Active).Count() },
+                { "Closed", tickets.Where(t => t.Status == TicketStatus.Closed).Count() }
+            };
         }
 
         // GET: api/Tickets/5

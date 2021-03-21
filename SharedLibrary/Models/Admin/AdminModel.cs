@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using SharedLibrary.Models.Ticket;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Security.Cryptography;
@@ -21,6 +23,8 @@ namespace SharedLibrary.Models.Admin
         [Key]
         [Required]
         public int AdminId { get; set; }
+
+        public virtual IEnumerable<TicketModel> Tickets { get; set; }
 
         [Column(TypeName = "varbinary(max)")]
         public byte[] Token { get; set; }

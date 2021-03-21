@@ -2,10 +2,9 @@
 @inject ILogger<AddCustomer> _logger
 <ValidateToken />
 
-
 <h3>Register new customer</h3>
 <TimeDisplay />
-<MessageBox Message="@_message" Error="@_error" LinkAction="GoToCustomer" MethodMessage="Go to customer" />
+<MessageBox Message="@_message" Error="@_error" />
 
 @if (_customer == null)
 {
@@ -34,54 +33,45 @@ else
             <ValidationMessage For="() => _customer.Email" />
         </div>
 
-        <button type="submit" class="btn btn-success" disabled=@submitting>Submit</button>
-        <button class="btn btn-secondary ms-2" @onclick="GoToList" disabled=@submitting>Back to List</button>
+        <button type="submit" class="btn btn-success" disabled=@_submitting>Submit</button>
+        <button class="btn btn-secondary ms-2" @onclick="GoToList" disabled=@_submitting>Back to List</button>
     </EditForm>
 }
 
 @code {
-    private string now;
-    private string _error;
-    private string _location;
-    private string _message;
-    private bool submitting = false;
-
     private CustomerModel _customer;
 
-    private string _customersUrl = "https://localhost:44330/api/customers";
+    private string _error;
+    private string _message;
+    private string _location;
+    private bool _submitting = false;
 
     protected override void OnInitialized()
     {
         _customer = new CustomerModel();
-        now = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
-        _message = string.Empty;
     }
 
     private async Task SubmitCustomer()
     {
+        _submitting = true;
         _error = string.Empty;
-        _location = string.Empty;
         _message = string.Empty;
-        submitting = true;
+        _location = string.Empty;
 
-        var response = await apiService.SendToAPIAsync(HttpMethod.Post, _customersUrl, _customer, true);
+        var response = await apiService.SendToAPIAsync(HttpMethod.Post, apiService.CustomersUrl, _customer, true);
         if (response.IsSuccessStatusCode)
-        {
-            _customer = new CustomerModel();
-            var payload = await response.Content.ReadFromJsonAsync<ResponseModel>();
-            _location = $"/customers/{payload.Result}";
-            _message = "Customer created! ";
-        }
+            _message = "Customer created!";
+        else if (response.StatusCode == HttpStatusCode.Unauthorized)
+            navigationManager.NavigateTo("/signin");
         else
         {
             _error = $"Could not create customer. {(int)response.StatusCode} {response.ReasonPhrase}";
             apiService.LogWarningIfDebug(await response.Content.ReadAsStringAsync(), _logger);
         }
-        submitting = false;
-    }
 
-    private void GoToCustomer()
-        => navigationManager.NavigateTo(_location);
+        _customer = new CustomerModel();
+        _submitting = false;
+    }
 
     private void GoToList()
         => navigationManager.NavigateTo("/customers");

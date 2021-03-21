@@ -3,7 +3,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var response = await apiService.SendToAPIAsync(HttpMethod.Post, "https://localhost:44330/api/admin/validate", auth: true);
+        var response = await apiService.SendToAPIAsync(HttpMethod.Post, apiService.ValidateUrl, auth: true);
         TokenValidated = response.IsSuccessStatusCode;
         if (!TokenValidated)
             navigationManager.NavigateTo("/signin", forceLoad: true);

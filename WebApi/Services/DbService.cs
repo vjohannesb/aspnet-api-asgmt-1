@@ -7,7 +7,6 @@ using SharedLibrary.Models.Ticket;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using WebApi.Controllers;
 using WebApi.Data;
@@ -26,11 +25,11 @@ namespace WebApi.Services
         }
 
         /*** Customers ***/
-        public async Task<IEnumerable<CustomerModel>> GetCustomersAsync()
-            => await _context.Customers.ToListAsync();
-
         public async Task<CustomerModel> GetCustomerAsync(int? id)
             => await _context.Customers.FindAsync(id);
+
+        public async Task<IEnumerable<CustomerModel>> GetCustomersAsync()
+            => await _context.Customers.ToListAsync();
 
         public async Task<IActionResult> CreateCustomerAsync(CustomerModel customer)
         {
@@ -48,29 +47,26 @@ namespace WebApi.Services
                 if (CustomerExists(customer.CustomerId))
                     return new ConflictResult();
                 else
-                    // Log?
                     throw;
             }
         }
 
         private bool CustomerExists(int id)
             => _context.Customers.Any(c => c.CustomerId == id);
-
-
-
+        /*** Customers ***/
 
 
         /*** Tickets ***/
         public async Task<TicketModel> GetTicketAsync(int? ticketId)
             => await _context.Tickets
                 .Include(t => t.Customer)
-                .Include(t => t.AssignedAdmin)
+                .Include(t => t.Admin)
                 .FirstOrDefaultAsync(t => t.TicketId == ticketId);
 
         public async Task<IEnumerable<TicketModel>> GetTicketsAsync()
             => await _context.Tickets
                 .Include(t => t.Customer)
-                .Include(t => t.AssignedAdmin)
+                .Include(t => t.Admin)
                 .ToListAsync();
 
 
@@ -153,7 +149,7 @@ namespace WebApi.Services
             }
 
             // Location header = api/tickets/{ticketId}, + en payload med TicketId som Result
-            return new CreatedAtActionResult(nameof(TicketsController.GetTicket), "Tickets", 
+            return new CreatedAtActionResult(nameof(TicketsController.GetTicket), "Tickets",
                 new { id = ticket.TicketId },
                 new ResponseModel(true, ticket.TicketId.ToString()));
         }
@@ -199,17 +195,12 @@ namespace WebApi.Services
                     return new StatusCodeResult(500);
                 }
             }
-            catch (Exception ex)
-            {
-                _logger.LogError($"[{ex.Source}] {ex.Message}");
-                _logger.LogError(ex.StackTrace);
-                return new StatusCodeResult(500);
-            }
 
             return new NoContentResult();
         }
 
         private bool TicketExists(int id)
             => _context.Tickets.Any(t => t.TicketId == id);
+        /*** Tickets ***/
     }
 }

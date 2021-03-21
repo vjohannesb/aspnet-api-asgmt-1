@@ -1,22 +1,17 @@
 ﻿using Blazored.LocalStorage;
-using Microsoft.AspNetCore.Components;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Net;
-using System.Threading.Tasks;
-using System.Net.Http.Headers;
-using System.Text;
-using Newtonsoft.Json;
-using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
-using SharedLibrary.Models.Admin;
-using SharedLibrary.Models.Customer;
-using SharedLibrary.Models.Ticket;
+using Newtonsoft.Json;
 using SharedLibrary.Models;
-using System.Diagnostics;
+using SharedLibrary.Models.Admin;
+using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace BlazorApp.Services
 {
@@ -25,12 +20,24 @@ namespace BlazorApp.Services
         private readonly ILocalStorageService _localStorage;
         private readonly HttpClient _httpClient;
         private string _token;
-        private readonly string _signInUrl = "https://localhost:44330/api/admin/signin";
+        private readonly string _signInUrl;
+        private readonly string _signOutUrl;
+
+        public string BaseUrl => "https://localhost:44330/api";
+        public string TicketsUrl => $"{BaseUrl}/tickets";
+        public string AdminsUrl => $"{BaseUrl}/admin";
+        public string CustomersUrl => $"{BaseUrl}/customers";
+        public string ValidateUrl => $"{AdminsUrl}/validate";
+        public string RegisterUrl => $"{AdminsUrl}/register";
+        public string StatusUrl => $"{TicketsUrl}/status";
 
         public APIService(HttpClient httpClient, ILocalStorageService localStorage)
         {
             _localStorage = localStorage;
             _httpClient = httpClient;
+
+            _signInUrl = $"{AdminsUrl}/signin";
+            _signOutUrl = $"{AdminsUrl}/signout";
         }
 
         // Helper för "snyggare" sparning av token i LocalStorage
@@ -39,8 +46,8 @@ namespace BlazorApp.Services
 
         // Helper för "snyggare" hämtning av token i LocalStorage
         // (GetItemAsStringAsync returnerar null om "accessToken" inte finns)
-        public async Task<string> GetTokenAsync() 
-            => (string.IsNullOrEmpty(_token) || string.IsNullOrWhiteSpace(_token)) 
+        public async Task<string> GetTokenAsync()
+            => (string.IsNullOrEmpty(_token) || string.IsNullOrWhiteSpace(_token))
                 ? await _localStorage.GetItemAsStringAsync("accessToken")
                 : _token;
 
@@ -48,20 +55,19 @@ namespace BlazorApp.Services
         public async Task<string> GetDisplayName()
         {
             _token = await GetTokenAsync();
-            if (!string.IsNullOrEmpty(_token))
-            {
-                var handler = new JwtSecurityTokenHandler();
-                var jsonToken = handler.ReadJwtToken(_token);
-                return jsonToken.Claims.FirstOrDefault(claim => claim.Type == "DisplayName")?.Value;
-            }
-            return null;
+            if (string.IsNullOrEmpty(_token))
+                return null;
+
+            var handler = new JwtSecurityTokenHandler();
+            var jsonToken = handler.ReadJwtToken(_token);
+            return jsonToken.Claims.FirstOrDefault(claim => claim.Type == "DisplayName")?.Value;
         }
 
         /* "Allomfattande" funktion för att skicka requests till API.
          * Hanterar exceptions och returnerar felmeddelande i form av HttpResponseMessage
          *   för felhantering där requesten görs
          * Använder EnsureSucessStatusCode för närmare kontroll av icke-ok requests */
-        public async Task<HttpResponseMessage> SendToAPIAsync(HttpMethod method, string url, 
+        public async Task<HttpResponseMessage> SendToAPIAsync(HttpMethod method, string url,
             object serializeContent = null, bool auth = false)
         {
             try
@@ -103,10 +109,10 @@ namespace BlazorApp.Services
             // Resterande exceptions är allra troligast pga bad request
             catch (Exception ex)
             {
-                return new HttpResponseMessage 
-                { 
-                    StatusCode = HttpStatusCode.BadRequest, 
-                    Content = new StringContent("Unhandled exception. " + ex.Message) 
+                return new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.BadRequest,
+                    Content = new StringContent("Unhandled exception. " + ex.Message)
                 };
             }
         }
@@ -126,6 +132,7 @@ namespace BlazorApp.Services
         // Helper för att logga ut
         public async Task SignOut()
         {
+            await SendToAPIAsync(HttpMethod.Post, _signOutUrl, auth: true);
             _token = null;
             await _localStorage.RemoveItemAsync("accessToken");
         }

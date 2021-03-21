@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using SharedLibrary.Models;
 using SharedLibrary.Models.Admin;
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -29,6 +30,12 @@ namespace WebApi.Services
             _tokenHandler = new JwtSecurityTokenHandler();
         }
 
+        public async Task<AdminModel> GetAdminAsync(int id)
+            => await _context.Administrators.FindAsync(id);
+
+        public async Task<IEnumerable<AdminModel>> GetAdminsAsync()
+            => await _context.Administrators.ToListAsync();
+
         public async Task<IActionResult> CreateAdminAsync(RegisterModel model)
         {
             if (string.IsNullOrEmpty(model.FirstName) ||
@@ -45,9 +52,8 @@ namespace WebApi.Services
                     });
             }
 
-            // BadRequest istället för Conflict för att dölja registrerade e-postadresser
             if (EmailRegistered(model.Email))
-                return new BadRequestResult();
+                return new ConflictResult();
 
             var admin = new AdminModel(model);
 
@@ -142,7 +148,7 @@ namespace WebApi.Services
         private bool AdminExists(int id)
             => _context.Administrators.Any(a => a.AdminId == id);
 
-        public int GetUserIdFromToken(string token)
+        private int GetUserIdFromToken(string token)
         {
             var jwtToken = _tokenHandler.ReadJwtToken(token);
             var tokenId = jwtToken.Claims.FirstOrDefault(claim => claim.Type == "UserId")?.Value;
@@ -150,5 +156,7 @@ namespace WebApi.Services
 
             return parsed ? id : 0;
         }
+
+
     }
 }

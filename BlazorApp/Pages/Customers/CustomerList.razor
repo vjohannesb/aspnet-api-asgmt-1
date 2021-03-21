@@ -10,12 +10,7 @@
     Add customer
 </button>
 
-@if (!string.IsNullOrEmpty(_error))
-{
-    <div class="alert alert-danger">
-        <span>@_error</span>
-    </div>
-}
+<MessageBox Error="@_error" />
 
 @if (_customers == null || _customers.Length < 1)
 {
@@ -48,26 +43,29 @@ else
 
 @code {
     private CustomerModel[] _customers;
-    private string _customersUrl = "https://localhost:44330/api/customers";
 
     private string _message = "Loading...";
     private string _error;
 
     protected override async Task OnInitializedAsync()
     {
-        var response = await apiService.SendToAPIAsync(HttpMethod.Get, _customersUrl, auth: true);
+        var response = await apiService.SendToAPIAsync(HttpMethod.Get, apiService.CustomersUrl, auth: true);
         if (response.IsSuccessStatusCode)
+        {
             _customers = await response.Content.ReadFromJsonAsync<CustomerModel[]>();
+            if (_customers.Length < 1)
+                _message = "No customers available.";
+            else
+                _message = string.Empty;
+        }
         else
         {
             _error = $"Error loading customers. {(int)response.StatusCode} {response.ReasonPhrase}";
+            _message = string.Empty;
             apiService.LogWarningIfDebug(await response.Content.ReadAsStringAsync(), _logger);
         }
 
-        if (_customers.Length < 1)
-            _message = "No customers available.";
-        else
-            _message = string.Empty;
+
     }
 
     private void AddCustomer()
