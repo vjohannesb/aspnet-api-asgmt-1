@@ -33,7 +33,7 @@ else
             {
                 <tr>
                     <td>@customer.CustomerId</td>
-                    <td>@customer.FirstName @customer.LastName</td>
+                    <td>@customer.DisplayName</td>
                     <td>@customer.Email</td>
                 </tr>
             }
@@ -42,7 +42,7 @@ else
 }
 
 @code {
-    private CustomerModel[] _customers;
+    private CustomerViewModel[] _customers;
 
     private string _message = "Loading...";
     private string _error;
@@ -52,7 +52,7 @@ else
         var response = await apiService.SendToAPIAsync(HttpMethod.Get, apiService.CustomersUrl, auth: true);
         if (response.IsSuccessStatusCode)
         {
-            _customers = await response.Content.ReadFromJsonAsync<CustomerModel[]>();
+            _customers = await response.Content.ReadFromJsonAsync<CustomerViewModel[]>();
             if (_customers.Length < 1)
                 _message = "No customers available.";
             else

@@ -22,8 +22,5 @@ namespace SharedLibrary.Models.Customer
         public int CustomerId { get; set; }
 
         public virtual IEnumerable<TicketModel> Tickets { get; set; }
-
-        [NotMapped]
-        public string DisplayName => $"{FirstName} {LastName}";
     }
 }

@@ -24,8 +24,7 @@ namespace SharedLibrary.Models.Admin
         [Required]
         public int AdminId { get; set; }
 
-        public virtual IEnumerable<TicketModel> Tickets { get; set; }
-
+        [JsonIgnore]
         [Column(TypeName = "varbinary(max)")]
         public byte[] Token { get; set; }
 
@@ -38,6 +37,8 @@ namespace SharedLibrary.Models.Admin
         [JsonIgnore]
         [Column(TypeName = "varbinary(max)")]
         public byte[] AdminHash { get; set; }
+
+        public virtual IEnumerable<TicketModel> Tickets { get; set; }
 
         public void CreatePasswordWithHash(string password)
         {

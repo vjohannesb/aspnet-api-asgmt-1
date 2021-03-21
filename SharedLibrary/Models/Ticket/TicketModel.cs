@@ -9,9 +9,7 @@ namespace SharedLibrary.Models.Ticket
     public class TicketModel
     {
 
-        public TicketModel()
-        {
-        }
+        public TicketModel() { }
 
         public TicketModel(TicketViewModel tvm)
         {

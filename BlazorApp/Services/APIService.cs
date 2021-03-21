@@ -19,7 +19,6 @@ namespace BlazorApp.Services
     {
         private readonly ILocalStorageService _localStorage;
         private readonly HttpClient _httpClient;
-        private string _token;
         private readonly string _signInUrl;
         private readonly string _signOutUrl;
 
@@ -45,16 +44,13 @@ namespace BlazorApp.Services
             => await _localStorage.SetItemAsync("accessToken", token);
 
         // Helper för "snyggare" hämtning av token i LocalStorage
-        // (GetItemAsStringAsync returnerar null om "accessToken" inte finns)
         public async Task<string> GetTokenAsync()
-            => (string.IsNullOrEmpty(_token) || string.IsNullOrWhiteSpace(_token))
-                ? await _localStorage.GetItemAsStringAsync("accessToken")
-                : _token;
+            => await _localStorage.GetItemAsStringAsync("accessToken");
 
         // Helper för "snyggare" hämtning av DisplayName i accessToken
         public async Task<string> GetDisplayName()
         {
-            _token = await GetTokenAsync();
+            var _token = await GetTokenAsync();
             if (string.IsNullOrEmpty(_token))
                 return null;
 
@@ -79,7 +75,7 @@ namespace BlazorApp.Services
 
                 if (auth)
                 {
-                    _token = await GetTokenAsync();
+                    var _token = await GetTokenAsync();
                     if (string.IsNullOrEmpty(_token))
                         return new HttpResponseMessage(HttpStatusCode.Unauthorized);
                     request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
@@ -95,10 +91,6 @@ namespace BlazorApp.Services
             {
                 var statusCode = ex.StatusCode ?? HttpStatusCode.ServiceUnavailable;
                 var content = new StringContent(ex.Message);
-
-                // GET Request istället för POST, exempelvis (mest för debugging)
-                if (ex.Message.Contains("GET Request cannot have a body."))
-                    statusCode = HttpStatusCode.BadRequest;
 
                 return new HttpResponseMessage
                 {
@@ -133,7 +125,6 @@ namespace BlazorApp.Services
         public async Task SignOut()
         {
             await SendToAPIAsync(HttpMethod.Post, _signOutUrl, auth: true);
-            _token = null;
             await _localStorage.RemoveItemAsync("accessToken");
         }
 

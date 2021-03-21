@@ -15,7 +15,5 @@ namespace WebApi.Data
         public DbSet<CustomerModel> Customers { get; set; }
 
         public DbSet<TicketModel> Tickets { get; set; }
-
-        //public DbSet<SessionToken> SessionTokens { get; set; }
     }
 }

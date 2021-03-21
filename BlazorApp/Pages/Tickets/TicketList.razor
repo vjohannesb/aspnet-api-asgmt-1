@@ -19,7 +19,7 @@
 
 @if (_tickets == null || _tickets.Length < 1)
 {
-    <p>@(_message ?? "Loading...")</p>
+    <p>@_message</p>
 }
 else
 {
@@ -93,7 +93,6 @@ else
     private async Task UpdateList(string url)
     {
         _refreshing = true;
-        _message = string.Empty;
         _error = string.Empty;
 
         var response = await apiService.SendToAPIAsync(HttpMethod.Get, url, auth: true);
@@ -112,6 +111,7 @@ else
             apiService.LogWarningIfDebug(await response.Content.ReadAsStringAsync(), _logger);
         }
 
+        _message = string.Empty;
         _refreshing = false;
     }
 

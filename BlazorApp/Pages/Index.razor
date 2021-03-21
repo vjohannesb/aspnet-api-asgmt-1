@@ -1,9 +1,13 @@
 ﻿@page "/"
-<ValidateToken @ref="_validateToken" />
+<ValidateToken />
 
-<h1 class="text-center mt-5 justify-">Welcome@(_displayName != null ? " " + _displayName : "")!</h1>
+<h1 class="text-center mt-5 justify-">Welcome@(_displayName != null ? $" {_displayName}" : "")!</h1>
 
-@if (_statuses != null)
+@if (_statuses == null)
+{
+    <p>Loading...</p>
+}
+else
 {
     <div class="row mt-5 mb-3">
         <div class="col-12 col-xl-4 mb-3 box box-open">
@@ -26,7 +30,6 @@
 
 
 @code {
-    private ValidateToken _validateToken;
     private Dictionary<string, int> _statuses;
 
     private string _displayName;
